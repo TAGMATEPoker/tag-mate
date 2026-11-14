@@ -58,6 +58,9 @@ export default function HomePage() {
   const [profilesMap, setProfilesMap] = useState<Record<string, Profile>>({});
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
 
+  // 募集フォームの開閉状態
+  const [showRecruitmentForm, setShowRecruitmentForm] = useState(false);
+
   // 新規募集フォーム
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -127,7 +130,6 @@ export default function HomePage() {
 
     let eventIdToUse: string | null = selectedEventId || null;
 
-    // ユーザーが自由入力でイベントを作成した場合
     if (!eventIdToUse && newEventTitle.trim()) {
       const { data: createdEvent, error: eventError } = await supabase
         .from('events')
@@ -168,6 +170,7 @@ export default function HomePage() {
     setNewEventShop('');
     setComment('');
     setSelectedEventId('');
+    setShowRecruitmentForm(false);
     setNotice('相方募集を投稿しました！');
     await loadData();
   };
@@ -238,10 +241,17 @@ export default function HomePage() {
               ポーカータッグ戦の相方探し専用（出会い目的禁止）
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <span className="text-xs text-zinc-300">
               {myProfile ? `${myProfile.name} さん` : 'プロフィール未設定'}
             </span>
+            <button
+              type="button"
+              onClick={() => setShowRecruitmentForm((prev) => !prev)}
+              className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-emerald-400"
+            >
+              {showRecruitmentForm ? '募集フォームを閉じる' : '相方を募集する'}
+            </button>
             <Link
               href="/profile"
               className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs font-semibold hover:bg-zinc-700"
@@ -259,7 +269,7 @@ export default function HomePage() {
 
         {!myProfile && (
           <div className="rounded-xl border border-amber-700/50 bg-amber-950/50 p-4 text-xs text-amber-200">
-            募集の投稿や「気になる」送信を行う前に、右上の「プロフィール編集」からプロフィールを保存してください。
+            募集の投稿や「気になる」送信を行う前に、「プロフィール編集」からプロフィールを保存してください。
           </div>
         )}
 
@@ -307,81 +317,112 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* 新規相方募集フォーム */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-          <h2 className="text-base font-bold text-white">相方募集を投稿する</h2>
-          <form onSubmit={handleCreateRecruitment} className="mt-4 space-y-4">
-            <div>
-              <label className="block text-xs text-zinc-300">既存イベントから選択（任意）</label>
-              <select
-                value={selectedEventId}
-                onChange={(e) => setSelectedEventId(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+        {/* 新規相方募集フォーム（ボタンを押したときだけ表示） */}
+        {showRecruitmentForm && (
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-base font-bold text-white">相方募集を投稿する</h2>
+              <button
+                type="button"
+                onClick={() => setShowRecruitmentForm(false)}
+                className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-700"
               >
-                <option value="">イベント未定 / 下で新しく入力</option>
-                {events.map((ev) => (
-                  <option key={ev.id} value={ev.id}>
-                    {ev.title} {ev.event_date ? `(${ev.event_date})` : ''}
-                  </option>
-                ))}
-              </select>
+                閉じる
+              </button>
             </div>
+            <form onSubmit={handleCreateRecruitment} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs text-zinc-300">既存イベントから選択（任意）</label>
+                <select
+                  value={selectedEventId}
+                  onChange={(e) => setSelectedEventId(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                >
+                  <option value="">イベント未定 / 下で新しく入力</option>
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.title} {ev.event_date ? `(${ev.event_date})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {!selectedEventId && (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <input
-                  type="text"
-                  value={newEventTitle}
-                  onChange={(e) => setNewEventTitle(e.target.value)}
-                  placeholder="イベント名（未定なら空欄可）"
-                  className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                />
-                <input
-                  type="date"
-                  value={newEventDate}
-                  onChange={(e) => setNewEventDate(e.target.value)}
-                  className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                />
-                <input
-                  type="text"
-                  value={newEventShop}
-                  onChange={(e) => setNewEventShop(e.target.value)}
-                  placeholder="開催店舗・場所（任意）"
-                  className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+              {!selectedEventId && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <input
+                    type="text"
+                    value={newEventTitle}
+                    onChange={(e) => setNewEventTitle(e.target.value)}
+                    placeholder="イベント名（未定なら空欄可）"
+                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="date"
+                    value={newEventDate}
+                    onChange={(e) => setNewEventDate(e.target.value)}
+                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={newEventShop}
+                    onChange={(e) => setNewEventShop(e.target.value)}
+                    placeholder="開催店舗・場所（任意）"
+                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs text-zinc-300">募集コメント</label>
+                <textarea
+                  rows={2}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="例：日曜のタッグ戦に出られる相方を探しています！"
+                  className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                 />
               </div>
-            )}
 
-            <div>
-              <label className="block text-xs text-zinc-300">募集コメント</label>
-              <textarea
-                rows={2}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="例：日曜のタッグ戦に出られる相方を探しています！"
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50"
-            >
-              {submitting ? '投稿中...' : '募集を投稿'}
-            </button>
-          </form>
-        </section>
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50"
+                >
+                  {submitting ? '投稿中...' : '募集を投稿'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowRecruitmentForm(false)}
+                  className="rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-zinc-300 hover:bg-zinc-700"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </form>
+          </section>
+        )}
 
         {/* 募集一覧 */}
         <section className="space-y-4">
-          <h2 className="text-base font-bold text-white">
-            相方募集一覧（{recruitments.length}件）
-          </h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-bold text-white">
+              相方募集一覧（{recruitments.length}件）
+            </h2>
+            {!showRecruitmentForm && (
+              <button
+                type="button"
+                onClick={() => setShowRecruitmentForm(true)}
+                className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-emerald-400"
+              >
+                相方を募集する
+              </button>
+            )}
+          </div>
 
           {recruitments.length === 0 ? (
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center text-xs text-zinc-400">
-              まだ募集がありません。上のフォームから最初の募集を投稿してみましょう。
+              まだ募集がありません。「相方を募集する」ボタンから最初の募集を投稿してみましょう。
             </div>
           ) : (
             recruitments.map((rec) => {
