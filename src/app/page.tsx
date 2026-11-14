@@ -25,6 +25,7 @@ type EventItem = {
   event_date: string | null;
   location: string | null;
   shop_name: string | null;
+  entry_fee: string | null;
   is_official: boolean;
 };
 
@@ -66,6 +67,7 @@ export default function HomePage() {
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
   const [newEventShop, setNewEventShop] = useState('');
+  const [newEventFee, setNewEventFee] = useState('');
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState('');
@@ -130,13 +132,14 @@ export default function HomePage() {
 
     let eventIdToUse: string | null = selectedEventId || null;
 
-    if (!eventIdToUse && newEventTitle.trim()) {
+    if (!eventIdToUse && (newEventTitle.trim() || newEventFee.trim() || newEventShop.trim() || newEventDate)) {
       const { data: createdEvent, error: eventError } = await supabase
         .from('events')
         .insert({
-          title: newEventTitle.trim(),
+          title: newEventTitle.trim() || 'イベント未定',
           event_date: newEventDate || null,
           shop_name: newEventShop.trim() || null,
+          entry_fee: newEventFee.trim() || null,
           is_official: false,
           created_by: userId,
         })
@@ -168,6 +171,7 @@ export default function HomePage() {
     setNewEventTitle('');
     setNewEventDate('');
     setNewEventShop('');
+    setNewEventFee('');
     setComment('');
     setSelectedEventId('');
     setShowRecruitmentForm(false);
@@ -341,14 +345,16 @@ export default function HomePage() {
                   <option value="">イベント未定 / 下で新しく入力</option>
                   {events.map((ev) => (
                     <option key={ev.id} value={ev.id}>
-                      {ev.title} {ev.event_date ? `(${ev.event_date})` : ''}
+                      {ev.title}
+                      {ev.event_date ? ` (${ev.event_date})` : ''}
+                      {ev.entry_fee ? ` / 参加費: ${ev.entry_fee}` : ''}
                     </option>
                   ))}
                 </select>
               </div>
 
               {!selectedEventId && (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs text-zinc-300">イベント名（未定なら空欄可）</label>
                     <input
@@ -375,6 +381,16 @@ export default function HomePage() {
                       value={newEventShop}
                       onChange={(e) => setNewEventShop(e.target.value)}
                       placeholder="店舗名・エリア"
+                      className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-300">参加費（任意）</label>
+                    <input
+                      type="text"
+                      value={newEventFee}
+                      onChange={(e) => setNewEventFee(e.target.value)}
+                      placeholder="例：5,000円 / 1ペア 8,000円"
                       className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                     />
                   </div>
@@ -453,11 +469,18 @@ export default function HomePage() {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <span className="inline-block rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] text-emerald-300">
-                        {ev ? ev.title : 'イベント未定'}
-                        {ev?.event_date ? ` / ${ev.event_date}` : ''}
-                        {ev?.shop_name ? ` / ${ev.shop_name}` : ''}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-block rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] text-emerald-300">
+                          {ev ? ev.title : 'イベント未定'}
+                          {ev?.event_date ? ` / ${ev.event_date}` : ''}
+                          {ev?.shop_name ? ` / ${ev.shop_name}` : ''}
+                        </span>
+                        {ev?.entry_fee && (
+                          <span className="inline-block rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300">
+                            参加費: {ev.entry_fee}
+                          </span>
+                        )}
+                      </div>
                       <h3 className="mt-2 text-base font-bold text-white">
                         {author?.name || 'プレイヤー'}
                         {isMine && (

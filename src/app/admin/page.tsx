@@ -11,6 +11,7 @@ type EventItem = {
   event_date: string | null;
   location: string | null;
   shop_name: string | null;
+  entry_fee: string | null;
   is_official: boolean;
   created_at?: string;
 };
@@ -27,6 +28,7 @@ export default function AdminEventsPage() {
   const [eventDate, setEventDate] = useState('');
   const [shopName, setShopName] = useState('');
   const [location, setLocation] = useState('');
+  const [entryFee, setEntryFee] = useState('');
   const [isOfficial, setIsOfficial] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState('');
@@ -74,6 +76,7 @@ export default function AdminEventsPage() {
       event_date: eventDate || null,
       shop_name: shopName.trim() || null,
       location: location.trim() || null,
+      entry_fee: entryFee.trim() || null,
       is_official: isOfficial,
       created_by: userId,
     });
@@ -89,6 +92,7 @@ export default function AdminEventsPage() {
     setEventDate('');
     setShopName('');
     setLocation('');
+    setEntryFee('');
     setIsOfficial(true);
     setNotice('イベントを登録しました！');
     await loadEvents();
@@ -141,14 +145,27 @@ export default function AdminEventsPage() {
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="block text-xs text-zinc-300">開催日</label>
+                <label className="block text-xs text-zinc-300">開催日（カレンダーから選択）</label>
                 <input
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm [color-scheme:dark]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-zinc-300">参加費</label>
+                <input
+                  type="text"
+                  value={entryFee}
+                  onChange={(e) => setEntryFee(e.target.value)}
+                  placeholder="例：5,000円 / 1ペア 8,000円"
                   className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-xs text-zinc-300">店舗名</label>
                 <input
@@ -159,17 +176,16 @@ export default function AdminEventsPage() {
                   className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300">エリア・場所（任意）</label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="例：東京・渋谷"
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-              />
+              <div>
+                <label className="block text-xs text-zinc-300">エリア・場所（任意）</label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="例：東京・渋谷"
+                  className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                />
+              </div>
             </div>
 
             <label className="flex items-center gap-2 text-xs text-zinc-300">
@@ -198,13 +214,18 @@ export default function AdminEventsPage() {
               key={ev.id}
               className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-xs"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {ev.is_official && (
                   <span className="rounded bg-emerald-950 px-2 py-0.5 text-[11px] text-emerald-300">
                     公式
                   </span>
                 )}
                 <span className="text-sm font-bold text-white">{ev.title}</span>
+                {ev.entry_fee && (
+                  <span className="rounded bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300">
+                    参加費: {ev.entry_fee}
+                  </span>
+                )}
               </div>
               <p className="mt-1 text-zinc-400">
                 {ev.event_date || '日程未定'}
