@@ -132,7 +132,10 @@ export default function HomePage() {
 
     let eventIdToUse: string | null = selectedEventId || null;
 
-    if (!eventIdToUse && (newEventTitle.trim() || newEventFee.trim() || newEventShop.trim() || newEventDate)) {
+    if (
+      !eventIdToUse &&
+      (newEventTitle.trim() || newEventFee.trim() || newEventShop.trim() || newEventDate)
+    ) {
       const { data: createdEvent, error: eventError } = await supabase
         .from('events')
         .insert({
@@ -214,6 +217,13 @@ export default function HomePage() {
     }
   };
 
+  // 特定イベントを選んで募集フォームを開く
+  const handleOpenFormForEvent = (eventId: string) => {
+    setSelectedEventId(eventId);
+    setShowRecruitmentForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
@@ -226,6 +236,9 @@ export default function HomePage() {
   events.forEach((ev) => {
     eventsById[ev.id] = ev;
   });
+
+  // 公式イベントは募集0件でも必ずイベント一覧に表示
+  const officialEvents = events.filter((ev) => ev.is_official);
 
   // 自分が関わっているマッチ成立一覧
   const matchedApplications = applications.filter((app) => {
@@ -345,6 +358,7 @@ export default function HomePage() {
                   <option value="">イベント未定 / 下で新しく入力</option>
                   {events.map((ev) => (
                     <option key={ev.id} value={ev.id}>
+                      {ev.is_official ? '【公式】' : ''}
                       {ev.title}
                       {ev.event_date ? ` (${ev.event_date})` : ''}
                       {ev.entry_fee ? ` / 参加費: ${ev.entry_fee}` : ''}
@@ -428,6 +442,65 @@ export default function HomePage() {
           </section>
         )}
 
+        {/* イベント一覧（公式イベントは募集0件でも表示） */}
+        <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-bold text-white">
+              イベント一覧（{officialEvents.length}件）
+            </h2>
+            <span className="text-[11px] text-zinc-400">公式イベント</span>
+          </div>
+
+          {officialEvents.length === 0 ? (
+            <p className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-400">
+              登録済みの公式イベントはまだありません。
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {officialEvents.map((ev) => {
+                const relatedCount = recruitments.filter((r) => r.event_id === ev.id).length;
+
+                return (
+                  <div
+                    key={ev.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded bg-emerald-950 px-2 py-0.5 text-[11px] text-emerald-300">
+                          公式
+                        </span>
+                        <span className="text-sm font-bold text-white">{ev.title}</span>
+                        {ev.entry_fee && (
+                          <span className="rounded bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300">
+                            参加費: {ev.entry_fee}
+                          </span>
+                        )}
+                        <span className="rounded bg-zinc-900 px-2 py-0.5 text-[11px] text-zinc-400">
+                          募集 {relatedCount}件
+                        </span>
+                      </div>
+                      <p className="text-zinc-400">
+                        {ev.event_date || '日程未定'}
+                        {ev.shop_name ? ` / ${ev.shop_name}` : ''}
+                        {ev.location ? ` / ${ev.location}` : ''}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenFormForEvent(ev.id)}
+                      className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400"
+                    >
+                      このイベントで募集する
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
         {/* 募集一覧 */}
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-2">
@@ -471,6 +544,7 @@ export default function HomePage() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="inline-block rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] text-emerald-300">
+                          {ev?.is_official ? '公式 / ' : ''}
                           {ev ? ev.title : 'イベント未定'}
                           {ev?.event_date ? ` / ${ev.event_date}` : ''}
                           {ev?.shop_name ? ` / ${ev.shop_name}` : ''}
