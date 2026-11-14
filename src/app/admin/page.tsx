@@ -16,6 +16,15 @@ type EventItem = {
   created_at?: string;
 };
 
+type EditFormState = {
+  title: string;
+  event_date: string;
+  shop_name: string;
+  location: string;
+  entry_fee: string;
+  is_official: boolean;
+};
+
 export default function AdminEventsPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -24,6 +33,7 @@ export default function AdminEventsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [events, setEvents] = useState<EventItem[]>([]);
 
+  // 新規登録フォーム
   const [title, setTitle] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [shopName, setShopName] = useState('');
@@ -31,6 +41,19 @@ export default function AdminEventsPage() {
   const [entryFee, setEntryFee] = useState('');
   const [isOfficial, setIsOfficial] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // 編集中のイベントIDとフォーム値
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditFormState>({
+    title: '',
+    event_date: '',
+    shop_name: '',
+    location: '',
+    entry_fee: '',
+    is_official: true,
+  });
+  const [updating, setUpdating] = useState(false);
+
   const [notice, setNotice] = useState('');
 
   const loadEvents = async () => {
@@ -64,6 +87,7 @@ export default function AdminEventsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 新規イベント登録
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId || !title.trim()) return;
@@ -98,6 +122,57 @@ export default function AdminEventsPage() {
     await loadEvents();
   };
 
+  // 編集モード開始
+  const startEditing = (ev: EventItem) => {
+    setNotice('');
+    setEditingId(ev.id);
+    setEditForm({
+      title: ev.title || '',
+      event_date: ev.event_date || '',
+      shop_name: ev.shop_name || '',
+      location: ev.location || '',
+      entry_fee: ev.entry_fee || '',
+      is_official: Boolean(ev.is_official),
+    });
+  };
+
+  // 編集キャンセル
+  const cancelEditing = () => {
+    setEditingId(null);
+  };
+
+  // 登録済みイベントの更新（管理画面からのみ実行）
+  const handleUpdateEvent = async (e: React.FormEvent, eventId: string) => {
+    e.preventDefault();
+    if (!editForm.title.trim()) return;
+
+    setUpdating(true);
+    setNotice('');
+
+    const { error } = await supabase
+      .from('events')
+      .update({
+        title: editForm.title.trim(),
+        event_date: editForm.event_date || null,
+        shop_name: editForm.shop_name.trim() || null,
+        location: editForm.location.trim() || null,
+        entry_fee: editForm.entry_fee.trim() || null,
+        is_official: editForm.is_official,
+      })
+      .eq('id', eventId);
+
+    setUpdating(false);
+
+    if (error) {
+      setNotice(`更新エラー: ${error.message}`);
+      return;
+    }
+
+    setEditingId(null);
+    setNotice('イベント内容を更新しました！');
+    await loadEvents();
+  };
+
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
@@ -112,7 +187,7 @@ export default function AdminEventsPage() {
         <header className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
           <div>
             <h1 className="text-lg font-bold text-emerald-400">イベント管理</h1>
-            <p className="text-xs text-zinc-400">TAG MATE イベント登録画面</p>
+            <p className="text-xs text-zinc-400">TAG MATE イベント登録・編集画面</p>
           </div>
           <Link
             href="/"
@@ -128,6 +203,7 @@ export default function AdminEventsPage() {
           </div>
         )}
 
+        {/* 新規イベント登録 */}
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
           <h2 className="text-sm font-bold text-white">新規イベント登録</h2>
           <form onSubmit={handleCreateEvent} className="mt-4 space-y-3">
@@ -207,33 +283,151 @@ export default function AdminEventsPage() {
           </form>
         </section>
 
+        {/* 登録済みイベント一覧（編集機能は管理画面のみ） */}
         <section className="space-y-3">
           <h2 className="text-sm font-bold text-white">登録済みイベント（{events.length}件）</h2>
-          {events.map((ev) => (
-            <div
-              key={ev.id}
-              className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-xs"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                {ev.is_official && (
-                  <span className="rounded bg-emerald-950 px-2 py-0.5 text-[11px] text-emerald-300">
-                    公式
-                  </span>
-                )}
-                <span className="text-sm font-bold text-white">{ev.title}</span>
-                {ev.entry_fee && (
-                  <span className="rounded bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300">
-                    参加費: {ev.entry_fee}
-                  </span>
+          {events.map((ev) => {
+            const isEditing = editingId === ev.id;
+
+            return (
+              <div
+                key={ev.id}
+                className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-xs"
+              >
+                {isEditing ? (
+                  <form
+                    onSubmit={(e) => handleUpdateEvent(e, ev.id)}
+                    className="space-y-3"
+                  >
+                    <div>
+                      <label className="block text-xs text-zinc-300">イベント名 *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.title}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({ ...prev, title: e.target.value }))
+                        }
+                        className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs text-zinc-300">
+                          開催日（カレンダーから選択）
+                        </label>
+                        <input
+                          type="date"
+                          value={editForm.event_date}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, event_date: e.target.value }))
+                          }
+                          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm [color-scheme:dark]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-300">参加費</label>
+                        <input
+                          type="text"
+                          value={editForm.entry_fee}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, entry_fee: e.target.value }))
+                          }
+                          placeholder="例：5,000円 / 1ペア 8,000円"
+                          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs text-zinc-300">店舗名</label>
+                        <input
+                          type="text"
+                          value={editForm.shop_name}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, shop_name: e.target.value }))
+                          }
+                          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-300">エリア・場所（任意）</label>
+                        <input
+                          type="text"
+                          value={editForm.location}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, location: e.target.value }))
+                          }
+                          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <label className="flex items-center gap-2 text-xs text-zinc-300">
+                      <input
+                        type="checkbox"
+                        checked={editForm.is_official}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({ ...prev, is_official: e.target.checked }))
+                        }
+                      />
+                      公式イベントとして登録する
+                    </label>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="submit"
+                        disabled={updating}
+                        className="rounded-lg bg-emerald-500 px-3.5 py-2 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50"
+                      >
+                        {updating ? '保存中...' : '変更を保存'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelEditing}
+                        className="rounded-lg border border-zinc-700 bg-zinc-800 px-3.5 py-2 text-xs text-zinc-300 hover:bg-zinc-700"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {ev.is_official && (
+                          <span className="rounded bg-emerald-950 px-2 py-0.5 text-[11px] text-emerald-300">
+                            公式
+                          </span>
+                        )}
+                        <span className="text-sm font-bold text-white">{ev.title}</span>
+                        {ev.entry_fee && (
+                          <span className="rounded bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300">
+                            参加費: {ev.entry_fee}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-zinc-400">
+                        {ev.event_date || '日程未定'}
+                        {ev.shop_name ? ` / ${ev.shop_name}` : ''}
+                        {ev.location ? ` / ${ev.location}` : ''}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => startEditing(ev)}
+                      className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700"
+                    >
+                      編集
+                    </button>
+                  </div>
                 )}
               </div>
-              <p className="mt-1 text-zinc-400">
-                {ev.event_date || '日程未定'}
-                {ev.shop_name ? ` / ${ev.shop_name}` : ''}
-                {ev.location ? ` / ${ev.location}` : ''}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </section>
       </div>
     </main>
