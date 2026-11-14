@@ -349,26 +349,35 @@ export default function HomePage() {
 
               {!selectedEventId && (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <input
-                    type="text"
-                    value={newEventTitle}
-                    onChange={(e) => setNewEventTitle(e.target.value)}
-                    placeholder="イベント名（未定なら空欄可）"
-                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="date"
-                    value={newEventDate}
-                    onChange={(e) => setNewEventDate(e.target.value)}
-                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="text"
-                    value={newEventShop}
-                    onChange={(e) => setNewEventShop(e.target.value)}
-                    placeholder="開催店舗・場所（任意）"
-                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                  />
+                  <div>
+                    <label className="block text-xs text-zinc-300">イベント名（未定なら空欄可）</label>
+                    <input
+                      type="text"
+                      value={newEventTitle}
+                      onChange={(e) => setNewEventTitle(e.target.value)}
+                      placeholder="イベント名"
+                      className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-300">開催日（カレンダーから選択）</label>
+                    <input
+                      type="date"
+                      value={newEventDate}
+                      onChange={(e) => setNewEventDate(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm [color-scheme:dark]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-300">開催店舗・場所（任意）</label>
+                    <input
+                      type="text"
+                      value={newEventShop}
+                      onChange={(e) => setNewEventShop(e.target.value)}
+                      placeholder="店舗名・エリア"
+                      className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                    />
+                  </div>
                 </div>
               )}
 
