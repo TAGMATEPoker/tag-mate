@@ -104,7 +104,7 @@ export default function ProfilePage() {
     if (error) {
       setMessage(`保存エラー: ${error.message}`);
     } else {
-      setMessage('プロフィールを保存しました！');
+      router.push('/');
     }
   };
 
