@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
+const AGE_GROUPS = ['10代', '20代', '30代', '40代', '50代', '60代', '非公開'];
+const GENDERS = ['男性', '女性', '非公開'];
 const AREAS = ['東京都', '神奈川県', '埼玉県', '千葉県', '大阪府', '愛知県', '福岡県', 'その他'];
 const EXPERIENCES = ['1年未満', '1〜3年', '3〜5年', '5年以上'];
 const PLAY_TYPES = ['TAG（タイトアグレッシブ）', 'LAG（ルースアグレッシブ）', 'タイトパッシブ', 'ルースパッシブ', 'バランス型'];
@@ -23,6 +25,8 @@ export default function ProfilePage() {
   const [name, setName] = useState('');
   const [xUsername, setXUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [ageGroup, setAgeGroup] = useState('非公開');
+  const [gender, setGender] = useState('非公開');
   const [area, setArea] = useState('東京都');
   const [experience, setExperience] = useState('1〜3年');
   const [playType, setPlayType] = useState('TAG（タイトアグレッシブ）');
@@ -54,6 +58,8 @@ export default function ProfilePage() {
         setName(profile.name || '');
         setXUsername(profile.x_username || '');
         setAvatarUrl(profile.avatar_url || user.user_metadata?.avatar_url || '');
+        setAgeGroup(profile.age_group || '非公開');
+        setGender(profile.gender || '非公開');
         setArea(profile.area || '東京都');
         setExperience(profile.experience || '1〜3年');
         setPlayType(profile.play_type || 'TAG（タイトアグレッシブ）');
@@ -72,7 +78,6 @@ export default function ProfilePage() {
     loadProfile();
   }, [router, supabase]);
 
-  // 画像ファイル選択時のアップロード処理
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
@@ -131,6 +136,8 @@ export default function ProfilePage() {
       name: name.trim(),
       x_username: cleanX,
       avatar_url: avatarUrl.trim() || null,
+      age_group: ageGroup,
+      gender,
       area,
       experience,
       play_type: playType,
@@ -146,7 +153,6 @@ export default function ProfilePage() {
       return;
     }
 
-    // 保存完了後に確実にTOPページへ遷移
     window.location.href = '/';
   };
 
@@ -220,6 +226,39 @@ export default function ProfilePage() {
               placeholder="例：poker_tag_taro（@なしでも可）"
               className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
             />
+          </div>
+
+          {/* 年齢・性別 */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs text-zinc-300">年齢</label>
+              <select
+                value={ageGroup}
+                onChange={(e) => setAgeGroup(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+              >
+                {AGE_GROUPS.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs text-zinc-300">性別</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+              >
+                {GENDERS.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
