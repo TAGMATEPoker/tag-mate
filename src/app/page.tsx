@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 type Profile = {
@@ -47,6 +48,11 @@ type ApplicationItem = {
   created_at: string;
 };
 
+type NoticeState = {
+  text: string;
+  href?: string;
+} | null;
+
 type ListTab = 'all' | 'mine' | 'applied';
 
 function HomeContent() {
@@ -77,7 +83,7 @@ function HomeContent() {
   const [newEventFee, setNewEventFee] = useState('');
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useState<NoticeState>(null);
 
   // ヘッダーメニューからのクエリパラメータ（?tab=mine / ?tab=applied / ?tab=all）に連動
   useEffect(() => {
@@ -145,12 +151,12 @@ function HomeContent() {
     if (!userId) return;
 
     if (!myProfile) {
-      setNotice('先にプロフィールを保存してください。');
+      setNotice({ text: '先にプロフィールを保存してください。' });
       return;
     }
 
     setSubmitting(true);
-    setNotice('');
+    setNotice(null);
 
     let eventIdToUse: string | null = selectedEventId || null;
 
@@ -172,7 +178,7 @@ function HomeContent() {
         .single();
 
       if (eventError) {
-        setNotice(`イベント作成エラー: ${eventError.message}`);
+        setNotice({ text: `イベント作成エラー: ${eventError.message}` });
         setSubmitting(false);
         return;
       }
@@ -189,7 +195,7 @@ function HomeContent() {
     setSubmitting(false);
 
     if (recError) {
-      setNotice(`投稿エラー: ${recError.message}`);
+      setNotice({ text: `投稿エラー: ${recError.message}` });
       return;
     }
 
@@ -200,13 +206,13 @@ function HomeContent() {
     setComment('');
     setSelectedEventId('');
     setShowRecruitmentForm(false);
-    setNotice('相方募集を投稿しました！');
+    setNotice({ text: '相方募集を投稿しました！' });
     await loadData();
   };
 
   const handleApply = async (recruitmentId: string) => {
     if (!userId) return;
-    setNotice('');
+    setNotice(null);
 
     const { error } = await supabase.from('applications').insert({
       recruitment_id: recruitmentId,
@@ -215,24 +221,30 @@ function HomeContent() {
     });
 
     if (error) {
-      setNotice(`送信エラー: ${error.message}`);
+      setNotice({ text: `送信エラー: ${error.message}` });
     } else {
-      setNotice('「気になる」を送信しました！');
+      setNotice({ text: '「気になる」を送信しました！' });
       await loadData();
     }
   };
 
   const handleMatchStatus = async (applicationId: string, status: 'matched' | 'rejected') => {
-    setNotice('');
+    setNotice(null);
     const { error } = await supabase
       .from('applications')
       .update({ status })
       .eq('id', applicationId);
 
     if (error) {
-      setNotice(`更新エラー: ${error.message}`);
+      setNotice({ text: `更新エラー: ${error.message}` });
+    } else if (status === 'matched') {
+      setNotice({
+        text: 'マッチングが成立！XのIDが共有されました。（タップして成立ページへ）',
+        href: '/matches',
+      });
+      await loadData();
     } else {
-      setNotice(status === 'matched' ? 'マッチング成立！X IDが共有されました。' : '辞退しました。');
+      setNotice({ text: '辞退しました。' });
       await loadData();
     }
   };
@@ -570,11 +582,20 @@ function HomeContent() {
           </button>
         </div>
 
-        {notice && (
-          <div className="rounded-xl border border-emerald-700/50 bg-emerald-950/60 px-4 py-3 text-xs text-emerald-300">
-            {notice}
-          </div>
-        )}
+        {/* 通知バナー（マッチング成立時はタップで /matches へ遷移） */}
+        {notice &&
+          (notice.href ? (
+            <Link
+              href={notice.href}
+              className="block rounded-xl border border-emerald-500/60 bg-emerald-950/70 px-4 py-3 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-900/70"
+            >
+              {notice.text}
+            </Link>
+          ) : (
+            <div className="rounded-xl border border-emerald-700/50 bg-emerald-950/60 px-4 py-3 text-xs text-emerald-300">
+              {notice.text}
+            </div>
+          ))}
 
         {!myProfile && (
           <div className="rounded-xl border border-amber-700/50 bg-amber-950/50 p-4 text-xs text-amber-200">
@@ -585,7 +606,15 @@ function HomeContent() {
         {/* マッチ成立（X ID共有）エリア */}
         {matchedApplications.length > 0 && (
           <section className="rounded-2xl border border-emerald-700/50 bg-zinc-900 p-5">
-            <h2 className="text-sm font-bold text-emerald-400">マッチング成立（連絡先共有）</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-bold text-emerald-400">マッチング成立（連絡先共有）</h2>
+              <Link
+                href="/matches"
+                className="text-xs font-semibold text-emerald-300 underline hover:text-emerald-200"
+              >
+                成立ページで見る
+              </Link>
+            </div>
             <div className="mt-3 space-y-3">
               {matchedApplications.map((app) => {
                 const rec = recruitments.find((r) => r.id === app.recruitment_id);
