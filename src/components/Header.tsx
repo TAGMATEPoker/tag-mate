@@ -86,7 +86,7 @@ export default function Header() {
               </span>
             </div>
             <span className="mt-0.5 text-[10px] tracking-wide text-zinc-400">
-              POKER TAG PARTNER
+              勝つための出会いを、ここから。
             </span>
           </div>
         </Link>
