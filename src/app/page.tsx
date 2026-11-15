@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 type Profile = {
@@ -47,8 +47,11 @@ type ApplicationItem = {
   created_at: string;
 };
 
-export default function HomePage() {
+type ListTab = 'all' | 'mine' | 'applied';
+
+function HomeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
@@ -60,6 +63,7 @@ export default function HomePage() {
   const [profilesMap, setProfilesMap] = useState<Record<string, Profile>>({});
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
 
+  const [activeTab, setActiveTab] = useState<ListTab>('all');
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [filterEventId, setFilterEventId] = useState<string | null>(null);
   const [expandedProfileIds, setExpandedProfileIds] = useState<Record<string, boolean>>({});
@@ -74,6 +78,22 @@ export default function HomePage() {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState('');
+
+  // ヘッダーメニューからのクエリパラメータ（?tab=mine / ?tab=applied / ?tab=all）に連動
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'mine' || tabParam === 'applied' || tabParam === 'all') {
+      setActiveTab(tabParam);
+      setFilterEventId(null);
+      if (tabParam === 'mine' || tabParam === 'applied') {
+        setTimeout(() => {
+          document
+            .getElementById('recruitment-list-section')
+            ?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [searchParams]);
 
   const loadData = async () => {
     const {
@@ -236,7 +256,6 @@ export default function HomePage() {
 
   const formatShortPlayType = (playType: string | null) => {
     if (!playType) return null;
-    // 「TAG（タイトアグレッシブ）」→「TAG」のように短縮表示
     const match = playType.match(/^([A-Z]+)/);
     return match ? match[1] : playType;
   };
@@ -262,9 +281,22 @@ export default function HomePage() {
     return app.applicant_id === userId || rec?.user_id === userId;
   });
 
+  const myRecruitments = recruitments.filter((r) => r.user_id === userId);
+  const myAppliedRecruitmentIds = new Set(
+    applications.filter((a) => a.applicant_id === userId).map((a) => a.recruitment_id)
+  );
+  const appliedRecruitments = recruitments.filter((r) => myAppliedRecruitmentIds.has(r.id));
+
+  const tabFilteredRecruitments =
+    activeTab === 'mine'
+      ? myRecruitments
+      : activeTab === 'applied'
+      ? appliedRecruitments
+      : recruitments;
+
   const visibleRecruitments = filterEventId
-    ? recruitments.filter((r) => r.event_id === filterEventId)
-    : recruitments;
+    ? tabFilteredRecruitments.filter((r) => r.event_id === filterEventId)
+    : tabFilteredRecruitments;
 
   const renderRecruitmentCard = (rec: RecruitmentItem) => {
     const author = profilesMap[rec.user_id];
@@ -287,7 +319,6 @@ export default function HomePage() {
         key={rec.id}
         className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5"
       >
-        {/* イベントバッジ */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-block rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] text-emerald-300">
             {ev?.is_official ? '公式 / ' : ''}
@@ -302,7 +333,6 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 投稿者ヘッダー（アイコン + 名前 + 年齢・性別ピル + 詳細開閉） */}
         <div className="mt-3 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             {author?.avatar_url ? (
@@ -332,7 +362,6 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* スタイリッシュな1行ステータスバー（歴・タイプ・スタイル・求める相手） */}
               {author && (
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
                   {author.experience && (
@@ -371,7 +400,6 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 詳細プロフィール（クリック時のみ展開） */}
         {author && isProfileOpen && (
           <div className="mt-3 space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/90 p-3.5 text-xs text-zinc-300">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -415,18 +443,16 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* 募集コメント */}
         {rec.comment && (
           <p className="mt-3 rounded-xl bg-zinc-950 p-3 text-sm text-zinc-200">
             {rec.comment}
           </p>
         )}
 
-        {/* アクションバー */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-800/90 bg-zinc-950/90 px-4 py-3">
           <span className="text-xs text-zinc-400">
             {isMine
-              ? 'あなたの募集投稿です'
+              ? `届いた「気になる」: ${incomingApps.length}件`
               : myApp
               ? '応募ステータス'
               : '相方候補なら「気になる」を送れます'}
@@ -463,7 +489,6 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 自分の募集に届いた「気になる」一覧 */}
         {isMine && incomingApps.length > 0 && (
           <div className="mt-4 border-t border-zinc-800 pt-3">
             <p className="text-xs font-semibold text-zinc-300">
@@ -553,7 +578,7 @@ export default function HomePage() {
 
         {!myProfile && (
           <div className="rounded-xl border border-amber-700/50 bg-amber-950/50 p-4 text-xs text-amber-200">
-            募集の投稿や「気になる」送信を行う前に、上部メニューの「プロフィール編集」からプロフィールを保存してください。
+            募集の投稿や「気になる」送信を行う前に、右上メニューの「プロフィール編集」からプロフィールを保存してください。
           </div>
         )}
 
@@ -780,6 +805,7 @@ export default function HomePage() {
                           <button
                             type="button"
                             onClick={() => {
+                              setActiveTab('all');
                               setFilterEventId(ev.id);
                               document
                                 .getElementById('recruitment-list-section')
@@ -807,12 +833,16 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* 募集一覧 */}
+        {/* 募集一覧（メニューと連動する切り替えタブ付き） */}
         <section id="recruitment-list-section" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-bold text-white">
-                相方募集一覧（{visibleRecruitments.length}件）
+                {activeTab === 'mine'
+                  ? `自分の募集（${visibleRecruitments.length}件）`
+                  : activeTab === 'applied'
+                  ? `応募一覧（${visibleRecruitments.length}件）`
+                  : `相方募集一覧（${visibleRecruitments.length}件）`}
               </h2>
               {filterEventId && (
                 <button
@@ -835,9 +865,59 @@ export default function HomePage() {
             )}
           </div>
 
+          {/* 切り替えタブ */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('all');
+                setFilterEventId(null);
+              }}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                activeTab === 'all'
+                  ? 'bg-emerald-500 text-zinc-950'
+                  : 'border border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800'
+              }`}
+            >
+              すべて（{recruitments.length}）
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('mine');
+                setFilterEventId(null);
+              }}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                activeTab === 'mine'
+                  ? 'bg-emerald-500 text-zinc-950'
+                  : 'border border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800'
+              }`}
+            >
+              自分の募集（{myRecruitments.length}）
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('applied');
+                setFilterEventId(null);
+              }}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                activeTab === 'applied'
+                  ? 'bg-emerald-500 text-zinc-950'
+                  : 'border border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800'
+              }`}
+            >
+              応募一覧（{appliedRecruitments.length}）
+            </button>
+          </div>
+
           {visibleRecruitments.length === 0 ? (
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center text-xs text-zinc-400">
-              {filterEventId
+              {activeTab === 'mine'
+                ? 'まだ自分の募集投稿はありません。'
+                : activeTab === 'applied'
+                ? 'まだ「気になる」を送った募集はありません。'
+                : filterEventId
                 ? '選択したイベントの募集はまだありません。'
                 : 'まだ募集がありません。「相方を募集する」ボタンから最初の募集を投稿してみましょう。'}
             </div>
@@ -847,5 +927,19 @@ export default function HomePage() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
+          読み込み中...
+        </main>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }
