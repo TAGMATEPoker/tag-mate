@@ -153,14 +153,14 @@ export default function Header() {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800 hover:text-emerald-400"
               >
-                <span>自分の募集</span>
+                <span>自分の募集履歴</span>
               </Link>
               <Link
                 href="/?tab=applied"
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800 hover:text-emerald-400"
               >
-                <span>応募一覧</span>
+                <span>自分の応募履歴</span>
               </Link>
 
               <div className="my-1 border-t border-zinc-800" />
