@@ -37,7 +37,24 @@ type ApplicationItem = {
   applicant_id: string;
   status: 'pending' | 'matched' | 'rejected';
   created_at: string;
+  updated_at?: string | null;
 };
+
+const STORAGE_KEY = 'tag_mate_contacted_matches';
+
+function formatMatchedDateTime(isoString: string | null | undefined): string {
+  if (!isoString) return '日時不明';
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return '日時不明';
+
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+
+  return `${yyyy}/${mm}/${dd} ${hh}:${min}`;
+}
 
 export default function MatchesPage() {
   const router = useRouter();
@@ -49,6 +66,18 @@ export default function MatchesPage() {
   const [eventsById, setEventsById] = useState<Record<string, EventItem>>({});
   const [profilesMap, setProfilesMap] = useState<Record<string, Profile>>({});
   const [matchedApps, setMatchedApps] = useState<ApplicationItem[]>([]);
+  const [contactedMap, setContactedMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        setContactedMap(JSON.parse(saved));
+      }
+    } catch {
+      // ストレージ読み込み失敗時は無視
+    }
+  }, []);
 
   useEffect(() => {
     const loadMatches = async () => {
@@ -106,6 +135,21 @@ export default function MatchesPage() {
     loadMatches();
   }, [router, supabase]);
 
+  const handleToggleContacted = (appId: string) => {
+    setContactedMap((prev) => {
+      const next = {
+        ...prev,
+        [appId]: !prev[appId],
+      };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // ストレージ書き込み失敗時は無視
+      }
+      return next;
+    });
+  };
+
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
@@ -145,13 +189,48 @@ export default function MatchesPage() {
               const partner = partnerId ? profilesMap[partnerId] : null;
               const ev = rec?.event_id ? eventsById[rec.event_id] : null;
               const cleanX = partner?.x_username?.replace(/^@/, '') || '';
+              const isContacted = Boolean(contactedMap[app.id]);
+              const matchedAtLabel = formatMatchedDateTime(app.updated_at || app.created_at);
 
               return (
                 <section
                   key={app.id}
                   className="rounded-2xl border border-emerald-700/50 bg-zinc-900 p-5"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-4">
+                  {/* 上部：成立日時 ＋ 連絡済み/未連絡トグル */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/90 pb-3">
+                    <span className="text-[11px] text-zinc-400">
+                      成立日時: <span className="font-medium text-zinc-200">{matchedAtLabel}</span>
+                    </span>
+
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isContacted}
+                      onClick={() => handleToggleContacted(app.id)}
+                      className={`inline-flex items-center gap-2.5 rounded-full border px-3 py-1 text-xs font-bold transition ${
+                        isContacted
+                          ? 'border-emerald-500/50 bg-emerald-950/70 text-emerald-300'
+                          : 'border-amber-400/50 bg-amber-400/10 text-amber-300'
+                      }`}
+                    >
+                      <span
+                        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                          isContacted ? 'bg-emerald-500' : 'bg-zinc-700'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                            isContacted ? 'translate-x-4.5' : 'translate-x-1'
+                          }`}
+                        />
+                      </span>
+                      <span>{isContacted ? '連絡済み' : '未連絡'}</span>
+                    </button>
+                  </div>
+
+                  {/* 下部：相手情報 ＋ Xリンク */}
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       {partner?.avatar_url ? (
                         <img
