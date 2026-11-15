@@ -16,6 +16,7 @@ export default function ProfilePage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [message, setMessage] = useState('');
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -71,6 +72,46 @@ export default function ProfilePage() {
     loadProfile();
   }, [router, supabase]);
 
+  // 画像ファイル選択時のアップロード処理
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    if (!file.type.startsWith('image/')) {
+      setMessage('画像ファイル（PNG / JPG / WEBP など）を選択してください。');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage('画像サイズは5MB以下にしてください。');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setMessage('');
+
+    const fileExt = file.name.split('.').pop() || 'png';
+    const filePath = `${userId}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      setUploadingAvatar(false);
+      setMessage(`画像アップロードエラー: ${uploadError.message}`);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    setAvatarUrl(publicUrlData.publicUrl);
+    setUploadingAvatar(false);
+    setMessage('アイコン画像をアップロードしました。「プロフィールを保存」を押して確定してください。');
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
@@ -99,13 +140,14 @@ export default function ProfilePage() {
       bio: bio.trim(),
     });
 
-    setSaving(false);
-
     if (error) {
+      setSaving(false);
       setMessage(`保存エラー: ${error.message}`);
-    } else {
-      router.push('/');
+      return;
     }
+
+    // 保存完了後に確実にTOPページへ遷移
+    window.location.href = '/';
   };
 
   if (loading) {
@@ -119,23 +161,45 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-zinc-950 px-4 py-8 text-white">
       <div className="mx-auto max-w-xl rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-emerald-400">プロフィール設定</h1>
-            <p className="mt-1 text-xs text-zinc-400">
-              ※XのIDはマッチ成立後に相手へ共有されます（募集時は非公開）
-            </p>
-          </div>
-          {avatarUrl && (
-            <img
-              src={avatarUrl}
-              alt="アイコン"
-              className="h-12 w-12 rounded-full border border-zinc-700 object-cover"
-            />
-          )}
+        <div>
+          <h1 className="text-xl font-bold text-emerald-400">プロフィール設定</h1>
+          <p className="mt-1 text-xs text-zinc-400">
+            ※XのIDはマッチ成立後に相手へ共有されます（募集時は非公開）
+          </p>
         </div>
 
         <form onSubmit={handleSave} className="mt-6 space-y-4">
+          {/* アイコン画像アップロード */}
+          <div className="flex items-center gap-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="アイコン"
+                className="h-16 w-16 rounded-full border border-zinc-700 object-cover"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 text-xs text-zinc-400">
+                未設定
+              </div>
+            )}
+            <div className="flex-1 space-y-1.5">
+              <label className="block text-xs font-semibold text-zinc-200">
+                プロフィールアイコン（画像アップロード）
+              </label>
+              <label className="inline-block cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700">
+                {uploadingAvatar ? 'アップロード中...' : '画像を選択して変更'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingAvatar}
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+              </label>
+              <p className="text-[11px] text-zinc-400">PNG / JPG / WEBP（5MB以下）</p>
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs text-zinc-300">プレイヤーネーム *</label>
             <input
@@ -154,17 +218,6 @@ export default function ProfilePage() {
               value={xUsername}
               onChange={(e) => setXUsername(e.target.value)}
               placeholder="例：poker_tag_taro（@なしでも可）"
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-zinc-300">アイコン画像URL（任意）</label>
-            <input
-              type="text"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="Googleアカウントの画像が自動セットされます"
               className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
             />
           </div>
@@ -280,7 +333,7 @@ export default function ProfilePage() {
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || uploadingAvatar}
             className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:opacity-50"
           >
             {saving ? '保存中...' : 'プロフィールを保存'}

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 type Profile = {
@@ -59,10 +58,11 @@ export default function HomePage() {
   const [profilesMap, setProfilesMap] = useState<Record<string, Profile>>({});
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
 
-  // 募集フォームの開閉状態
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+  const [filterEventId, setFilterEventId] = useState<string | null>(null);
+
   const [showRecruitmentForm, setShowRecruitmentForm] = useState(false);
 
-  // 新規募集フォーム
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
@@ -117,7 +117,6 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 新規募集の投稿
   const handleCreateRecruitment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
@@ -182,7 +181,6 @@ export default function HomePage() {
     await loadData();
   };
 
-  // 「気になる」送信
   const handleApply = async (recruitmentId: string) => {
     if (!userId) return;
     setNotice('');
@@ -201,7 +199,6 @@ export default function HomePage() {
     }
   };
 
-  // マッチ承認（募集主が応募を承認）
   const handleMatchStatus = async (applicationId: string, status: 'matched' | 'rejected') => {
     setNotice('');
     const { error } = await supabase
@@ -217,11 +214,14 @@ export default function HomePage() {
     }
   };
 
-  // 特定イベントを選んで募集フォームを開く
   const handleOpenFormForEvent = (eventId: string) => {
     setSelectedEventId(eventId);
     setShowRecruitmentForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleToggleEventRecruitments = (eventId: string) => {
+    setExpandedEventId((prev) => (prev === eventId ? null : eventId));
   };
 
   if (loading) {
@@ -237,46 +237,228 @@ export default function HomePage() {
     eventsById[ev.id] = ev;
   });
 
-  // 公式イベントは募集0件でも必ずイベント一覧に表示
   const officialEvents = events.filter((ev) => ev.is_official);
 
-  // 自分が関わっているマッチ成立一覧
   const matchedApplications = applications.filter((app) => {
     if (app.status !== 'matched') return false;
     const rec = recruitments.find((r) => r.id === app.recruitment_id);
     return app.applicant_id === userId || rec?.user_id === userId;
   });
 
-  return (
-    <main className="min-h-screen bg-zinc-950 px-4 py-8 text-white">
-      <div className="mx-auto max-w-3xl space-y-8">
-        {/* ヘッダー */}
-        <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-          <div>
-            <h1 className="text-xl font-bold text-emerald-400">TAG MATE</h1>
-            <p className="text-xs text-zinc-400">
-              ポーカータッグ戦の相方探し専用（出会い目的禁止）
-            </p>
+  const visibleRecruitments = filterEventId
+    ? recruitments.filter((r) => r.event_id === filterEventId)
+    : recruitments;
+
+  const renderRecruitmentCard = (rec: RecruitmentItem) => {
+    const author = profilesMap[rec.user_id];
+    const ev = rec.event_id ? eventsById[rec.event_id] : null;
+    const isMine = rec.user_id === userId;
+
+    const myApp = applications.find(
+      (a) => a.recruitment_id === rec.id && a.applicant_id === userId
+    );
+    const incomingApps = isMine
+      ? applications.filter((a) => a.recruitment_id === rec.id)
+      : [];
+
+    return (
+      <article
+        key={rec.id}
+        className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5"
+      >
+        <div className="flex items-start gap-3">
+          {author?.avatar_url ? (
+            <img
+              src={author.avatar_url}
+              alt={author.name}
+              className="h-11 w-11 shrink-0 rounded-full border border-zinc-700 object-cover"
+            />
+          ) : (
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 text-xs font-bold text-zinc-300">
+              {(author?.name || 'P').slice(0, 1)}
+            </div>
+          )}
+
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-block rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] text-emerald-300">
+                {ev?.is_official ? '公式 / ' : ''}
+                {ev ? ev.title : 'イベント未定'}
+                {ev?.event_date ? ` / ${ev.event_date}` : ''}
+                {ev?.shop_name ? ` / ${ev.shop_name}` : ''}
+              </span>
+              {ev?.entry_fee && (
+                <span className="inline-block rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300">
+                  参加費: {ev.entry_fee}
+                </span>
+              )}
+            </div>
+            <h3 className="mt-1.5 text-base font-bold text-white">
+              {author?.name || 'プレイヤー'}
+              {isMine && (
+                <span className="ml-2 rounded bg-zinc-800 px-2 py-0.5 text-[11px] text-zinc-400">
+                  自分の募集
+                </span>
+              )}
+            </h3>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs text-zinc-300">
+        </div>
+
+        {author && (
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-zinc-300">
+            {author.area && (
+              <span className="rounded bg-zinc-950 px-2 py-1">地域: {author.area}</span>
+            )}
+            {author.experience && (
+              <span className="rounded bg-zinc-950 px-2 py-1">歴: {author.experience}</span>
+            )}
+            {author.play_type && (
+              <span className="rounded bg-zinc-950 px-2 py-1">
+                タイプ: {author.play_type}
+              </span>
+            )}
+            {author.stance && (
+              <span className="rounded bg-zinc-950 px-2 py-1">
+                スタイル: {author.stance}
+              </span>
+            )}
+            {author.home_shop && (
+              <span className="rounded bg-zinc-950 px-2 py-1">
+                店舗: {author.home_shop}
+              </span>
+            )}
+          </div>
+        )}
+
+        {rec.comment && (
+          <p className="mt-3 rounded-xl bg-zinc-950 p-3 text-sm text-zinc-200">
+            {rec.comment}
+          </p>
+        )}
+
+        {author?.bio && (
+          <p className="mt-2 text-xs text-zinc-400">自己紹介: {author.bio}</p>
+        )}
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-800/90 bg-zinc-950/90 px-4 py-3">
+          <span className="text-xs text-zinc-400">
+            {isMine
+              ? 'あなたの募集投稿です'
+              : myApp
+              ? '応募ステータス'
+              : '相方候補なら「気になる」を送れます'}
+          </span>
+
+          {!isMine && (
+            <div>
+              {myApp ? (
+                <span
+                  className={`inline-block rounded-xl px-4 py-2 text-xs font-bold ${
+                    myApp.status === 'matched'
+                      ? 'bg-emerald-500 text-zinc-950'
+                      : myApp.status === 'rejected'
+                      ? 'bg-zinc-800 text-zinc-400'
+                      : 'border border-amber-400/50 bg-amber-400/15 text-amber-300'
+                  }`}
+                >
+                  {myApp.status === 'matched'
+                    ? '✓ マッチ成立'
+                    : myApp.status === 'rejected'
+                    ? '見送り'
+                    : '★ 気になる送信済み'}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleApply(rec.id)}
+                  className="rounded-xl bg-amber-400 px-5 py-2.5 text-xs font-extrabold tracking-wide text-zinc-950 shadow-sm hover:bg-amber-300"
+                >
+                  ★ 気になるを送る
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {isMine && incomingApps.length > 0 && (
+          <div className="mt-4 border-t border-zinc-800 pt-3">
+            <p className="text-xs font-semibold text-zinc-300">
+              届いた「気になる」（{incomingApps.length}件）
+            </p>
+            <div className="mt-2 space-y-2">
+              {incomingApps.map((app) => {
+                const applicant = profilesMap[app.applicant_id];
+                return (
+                  <div
+                    key={app.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-zinc-950 px-3 py-2 text-xs"
+                  >
+                    <div>
+                      <span className="font-semibold text-white">
+                        {applicant?.name || 'ユーザー'}
+                      </span>
+                      <span className="ml-2 text-zinc-400">
+                        ({applicant?.area} / {applicant?.experience} / {applicant?.play_type})
+                      </span>
+                    </div>
+                    {app.status === 'pending' ? (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleMatchStatus(app.id, 'matched')}
+                          className="rounded bg-emerald-500 px-2.5 py-1 font-semibold text-zinc-950 hover:bg-emerald-400"
+                        >
+                          マッチ成立
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMatchStatus(app.id, 'rejected')}
+                          className="rounded bg-zinc-800 px-2.5 py-1 text-zinc-300 hover:bg-zinc-700"
+                        >
+                          見送り
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-zinc-400">
+                        {app.status === 'matched' ? 'マッチ成立済み' : '見送り済み'}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </article>
+    );
+  };
+
+  return (
+    <main className="min-h-screen bg-zinc-950 px-4 py-6 text-white">
+      <div className="mx-auto max-w-3xl space-y-8">
+        {/* ユーザー＆募集アクションバー */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 px-5 py-4">
+          <div className="flex items-center gap-3">
+            {myProfile?.avatar_url && (
+              <img
+                src={myProfile.avatar_url}
+                alt={myProfile.name}
+                className="h-9 w-9 rounded-full border border-zinc-700 object-cover"
+              />
+            )}
+            <span className="text-xs font-semibold text-zinc-200">
               {myProfile ? `${myProfile.name} さん` : 'プロフィール未設定'}
             </span>
-            <button
-              type="button"
-              onClick={() => setShowRecruitmentForm((prev) => !prev)}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-emerald-400"
-            >
-              {showRecruitmentForm ? '募集フォームを閉じる' : '相方を募集する'}
-            </button>
-            <Link
-              href="/profile"
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs font-semibold hover:bg-zinc-700"
-            >
-              プロフィール編集
-            </Link>
           </div>
-        </header>
+
+          <button
+            type="button"
+            onClick={() => setShowRecruitmentForm((prev) => !prev)}
+            className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-emerald-400"
+          >
+            {showRecruitmentForm ? '募集フォームを閉じる' : '相方を募集する'}
+          </button>
+        </div>
 
         {notice && (
           <div className="rounded-xl border border-emerald-700/50 bg-emerald-950/60 px-4 py-3 text-xs text-emerald-300">
@@ -286,7 +468,7 @@ export default function HomePage() {
 
         {!myProfile && (
           <div className="rounded-xl border border-amber-700/50 bg-amber-950/50 p-4 text-xs text-amber-200">
-            募集の投稿や「気になる」送信を行う前に、「プロフィール編集」からプロフィールを保存してください。
+            募集の投稿や「気になる」送信を行う前に、上部メニューの「プロフィール編集」からプロフィールを保存してください。
           </div>
         )}
 
@@ -334,7 +516,7 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* 新規相方募集フォーム（ボタンを押したときだけ表示） */}
+        {/* 新規相方募集フォーム */}
         {showRecruitmentForm && (
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
             <div className="flex items-center justify-between gap-2">
@@ -442,7 +624,7 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* イベント一覧（公式イベントは募集0件でも表示） */}
+        {/* イベント一覧 */}
         <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-bold text-white">
@@ -458,42 +640,86 @@ export default function HomePage() {
           ) : (
             <div className="space-y-3">
               {officialEvents.map((ev) => {
-                const relatedCount = recruitments.filter((r) => r.event_id === ev.id).length;
+                const relatedRecruitments = recruitments.filter((r) => r.event_id === ev.id);
+                const isExpanded = expandedEventId === ev.id;
 
                 return (
                   <div
                     key={ev.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs"
+                    className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs"
                   >
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded bg-emerald-950 px-2 py-0.5 text-[11px] text-emerald-300">
-                          公式
-                        </span>
-                        <span className="text-sm font-bold text-white">{ev.title}</span>
-                        {ev.entry_fee && (
-                          <span className="rounded bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300">
-                            参加費: {ev.entry_fee}
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded bg-emerald-950 px-2 py-0.5 text-[11px] text-emerald-300">
+                            公式
                           </span>
-                        )}
-                        <span className="rounded bg-zinc-900 px-2 py-0.5 text-[11px] text-zinc-400">
-                          募集 {relatedCount}件
-                        </span>
+                          <span className="text-sm font-bold text-white">{ev.title}</span>
+                          {ev.entry_fee && (
+                            <span className="rounded bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300">
+                              参加費: {ev.entry_fee}
+                            </span>
+                          )}
+                          <span className="rounded bg-zinc-900 px-2 py-0.5 text-[11px] text-zinc-400">
+                            募集 {relatedRecruitments.length}件
+                          </span>
+                        </div>
+                        <p className="text-zinc-400">
+                          {ev.event_date || '日程未定'}
+                          {ev.shop_name ? ` / ${ev.shop_name}` : ''}
+                          {ev.location ? ` / ${ev.location}` : ''}
+                        </p>
                       </div>
-                      <p className="text-zinc-400">
-                        {ev.event_date || '日程未定'}
-                        {ev.shop_name ? ` / ${ev.shop_name}` : ''}
-                        {ev.location ? ` / ${ev.location}` : ''}
-                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleEventRecruitments(ev.id)}
+                          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700"
+                        >
+                          {isExpanded
+                            ? '募集を閉じる'
+                            : `このイベントの募集を見る（${relatedRecruitments.length}）`}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenFormForEvent(ev.id)}
+                          className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400"
+                        >
+                          このイベントで募集する
+                        </button>
+                      </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleOpenFormForEvent(ev.id)}
-                      className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400"
-                    >
-                      このイベントで募集する
-                    </button>
+                    {isExpanded && (
+                      <div className="space-y-3 border-t border-zinc-800 pt-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] font-semibold text-emerald-300">
+                            「{ev.title}」の募集一覧（{relatedRecruitments.length}件）
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFilterEventId(ev.id);
+                              document
+                                .getElementById('recruitment-list-section')
+                                ?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="text-[11px] text-amber-300 underline hover:text-amber-200"
+                          >
+                            下の募集一覧でも絞り込む
+                          </button>
+                        </div>
+
+                        {relatedRecruitments.length === 0 ? (
+                          <p className="rounded-lg bg-zinc-900 p-3 text-xs text-zinc-400">
+                            このイベントの募集はまだありません。
+                          </p>
+                        ) : (
+                          relatedRecruitments.map((rec) => renderRecruitmentCard(rec))
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -502,11 +728,22 @@ export default function HomePage() {
         </section>
 
         {/* 募集一覧 */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-base font-bold text-white">
-              相方募集一覧（{recruitments.length}件）
-            </h2>
+        <section id="recruitment-list-section" className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-bold text-white">
+                相方募集一覧（{visibleRecruitments.length}件）
+              </h2>
+              {filterEventId && (
+                <button
+                  type="button"
+                  onClick={() => setFilterEventId(null)}
+                  className="rounded-lg border border-amber-400/50 bg-amber-400/15 px-2.5 py-1 text-[11px] font-semibold text-amber-300 hover:bg-amber-400/25"
+                >
+                  絞り込み解除（{eventsById[filterEventId]?.title || 'イベント'}）×
+                </button>
+              )}
+            </div>
             {!showRecruitmentForm && (
               <button
                 type="button"
@@ -518,162 +755,14 @@ export default function HomePage() {
             )}
           </div>
 
-          {recruitments.length === 0 ? (
+          {visibleRecruitments.length === 0 ? (
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center text-xs text-zinc-400">
-              まだ募集がありません。「相方を募集する」ボタンから最初の募集を投稿してみましょう。
+              {filterEventId
+                ? '選択したイベントの募集はまだありません。'
+                : 'まだ募集がありません。「相方を募集する」ボタンから最初の募集を投稿してみましょう。'}
             </div>
           ) : (
-            recruitments.map((rec) => {
-              const author = profilesMap[rec.user_id];
-              const ev = rec.event_id ? eventsById[rec.event_id] : null;
-              const isMine = rec.user_id === userId;
-
-              const myApp = applications.find(
-                (a) => a.recruitment_id === rec.id && a.applicant_id === userId
-              );
-              const incomingApps = isMine
-                ? applications.filter((a) => a.recruitment_id === rec.id)
-                : [];
-
-              return (
-                <article
-                  key={rec.id}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-block rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] text-emerald-300">
-                          {ev?.is_official ? '公式 / ' : ''}
-                          {ev ? ev.title : 'イベント未定'}
-                          {ev?.event_date ? ` / ${ev.event_date}` : ''}
-                          {ev?.shop_name ? ` / ${ev.shop_name}` : ''}
-                        </span>
-                        {ev?.entry_fee && (
-                          <span className="inline-block rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300">
-                            参加費: {ev.entry_fee}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="mt-2 text-base font-bold text-white">
-                        {author?.name || 'プレイヤー'}
-                        {isMine && (
-                          <span className="ml-2 rounded bg-zinc-800 px-2 py-0.5 text-[11px] text-zinc-400">
-                            自分の募集
-                          </span>
-                        )}
-                      </h3>
-                    </div>
-
-                    {!isMine && (
-                      <div>
-                        {myApp ? (
-                          <span className="rounded-lg bg-zinc-800 px-3 py-2 text-xs text-zinc-300">
-                            {myApp.status === 'matched'
-                              ? 'マッチ成立'
-                              : myApp.status === 'rejected'
-                              ? '見送り'
-                              : '気になる送信済み'}
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => handleApply(rec.id)}
-                            className="rounded-xl bg-white px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-zinc-200"
-                          >
-                            気になる
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {author && (
-                    <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-zinc-300">
-                      {author.area && (
-                        <span className="rounded bg-zinc-950 px-2 py-1">地域: {author.area}</span>
-                      )}
-                      {author.experience && (
-                        <span className="rounded bg-zinc-950 px-2 py-1">歴: {author.experience}</span>
-                      )}
-                      {author.play_type && (
-                        <span className="rounded bg-zinc-950 px-2 py-1">
-                          タイプ: {author.play_type}
-                        </span>
-                      )}
-                      {author.stance && (
-                        <span className="rounded bg-zinc-950 px-2 py-1">
-                          スタイル: {author.stance}
-                        </span>
-                      )}
-                      {author.home_shop && (
-                        <span className="rounded bg-zinc-950 px-2 py-1">
-                          店舗: {author.home_shop}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {rec.comment && (
-                    <p className="mt-3 rounded-xl bg-zinc-950 p-3 text-sm text-zinc-200">
-                      {rec.comment}
-                    </p>
-                  )}
-
-                  {author?.bio && (
-                    <p className="mt-2 text-xs text-zinc-400">自己紹介: {author.bio}</p>
-                  )}
-
-                  {/* 自分の募集に届いた「気になる」一覧 */}
-                  {isMine && incomingApps.length > 0 && (
-                    <div className="mt-4 border-t border-zinc-800 pt-3">
-                      <p className="text-xs font-semibold text-zinc-300">
-                        届いた「気になる」（{incomingApps.length}件）
-                      </p>
-                      <div className="mt-2 space-y-2">
-                        {incomingApps.map((app) => {
-                          const applicant = profilesMap[app.applicant_id];
-                          return (
-                            <div
-                              key={app.id}
-                              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-zinc-950 px-3 py-2 text-xs"
-                            >
-                              <div>
-                                <span className="font-semibold text-white">
-                                  {applicant?.name || 'ユーザー'}
-                                </span>
-                                <span className="ml-2 text-zinc-400">
-                                  ({applicant?.area} / {applicant?.experience} / {applicant?.play_type})
-                                </span>
-                              </div>
-                              {app.status === 'pending' ? (
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleMatchStatus(app.id, 'matched')}
-                                    className="rounded bg-emerald-500 px-2.5 py-1 font-semibold text-zinc-950 hover:bg-emerald-400"
-                                  >
-                                    マッチ成立
-                                  </button>
-                                  <button
-                                    onClick={() => handleMatchStatus(app.id, 'rejected')}
-                                    className="rounded bg-zinc-800 px-2.5 py-1 text-zinc-300 hover:bg-zinc-700"
-                                  >
-                                    見送り
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className="text-zinc-400">
-                                  {app.status === 'matched' ? 'マッチ成立済み' : '見送り済み'}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </article>
-              );
-            })
+            visibleRecruitments.map((rec) => renderRecruitmentCard(rec))
           )}
         </section>
       </div>
