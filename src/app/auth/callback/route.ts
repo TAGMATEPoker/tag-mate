@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
 const ADMIN_EMAIL = 'tagmate.info@gmail.com';
 
@@ -9,17 +10,36 @@ export async function GET(request: Request) {
   const next = searchParams.get('next');
 
   if (code) {
-    const supabase = await createClient();
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // Cookie書き込み制限環境向けのフォールバック
+            }
+          },
+        },
+      }
+    );
+
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      // 最終アクセス日時を更新（プロフィールが存在する場合）
       await supabase
         .from('profiles')
         .update({ last_active_at: new Date().toISOString() })
         .eq('id', data.user.id);
 
-      // 管理者はデフォルトで /admin へ遷移
       if (data.user.email === ADMIN_EMAIL) {
         return NextResponse.redirect(`${origin}/admin`);
       }
