@@ -84,6 +84,17 @@ function formatJapaneseDateHeader(dateStr: string | null): string {
   return `${month}/${day} (${weekdays[d.getDay()]})`;
 }
 
+function scrollToEventSection() {
+  const el = document.getElementById('event-list-section');
+  if (!el) return;
+  const headerOffset = 84;
+  const elementTop = el.getBoundingClientRect().top + window.scrollY;
+  window.scrollTo({
+    top: Math.max(0, elementTop - headerOffset),
+    behavior: 'smooth',
+  });
+}
+
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -129,22 +140,23 @@ function HomeContent() {
     if (viewParam === 'events') {
       setFilterEventId(null);
       setTimeout(() => {
-        document
-          .getElementById('event-list-section')
-          ?.scrollIntoView({ behavior: 'smooth' });
-      }, 80);
+        scrollToEventSection();
+      }, 120);
     } else if (viewParam === 'search') {
       setTimeout(() => {
         const input = document.getElementById('home-search-input') as HTMLInputElement | null;
-        input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        input?.focus();
-      }, 80);
+        if (!input) return;
+        const headerOffset = 100;
+        const top = input.getBoundingClientRect().top + window.scrollY - headerOffset;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        input.focus();
+      }, 120);
     } else if (!viewParam || viewParam === 'home') {
       setFilterEventId(null);
       setExpandedEventId(null);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [searchParams]);
+  }, [searchParams, loading]);
 
   const loadData = async () => {
     const {
@@ -652,12 +664,13 @@ function HomeContent() {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <a
-              href="#event-list-section"
+            <button
+              type="button"
+              onClick={scrollToEventSection}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#00D69F] to-[#00B88D] px-5 py-3 text-sm font-extrabold text-white shadow-[0_6px_18px_rgba(0,196,154,0.35)] transition hover:opacity-95"
             >
               <span>🔍 イベントを探す</span>
-            </a>
+            </button>
             <button
               type="button"
               onClick={() => setShowRecruitmentForm((prev) => !prev)}
@@ -843,7 +856,7 @@ function HomeContent() {
           </section>
         )}
 
-        <section id="event-list-section" className="space-y-4">
+        <section id="event-list-section" className="scroll-mt-24 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-base font-extrabold text-slate-900">
               <span>📅</span>

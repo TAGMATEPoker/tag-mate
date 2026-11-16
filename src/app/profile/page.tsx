@@ -30,6 +30,10 @@ export default function ProfilePage() {
   const [bio, setBio] = useState('');
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     const loadProfile = async () => {
       const {
         data: { user },
@@ -65,6 +69,9 @@ export default function ProfilePage() {
       }
 
       setLoading(false);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 0);
     };
 
     loadProfile();
