@@ -31,30 +31,66 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-8 text-white">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl">
-        <div className="text-center">
-          <h1 className="text-2xl font-black tracking-wider text-white">
-            TAG <span className="text-emerald-400">MATE</span>
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#E6F7F4] via-[#F4F8FB] to-[#EEF5FF] px-4 py-8 text-slate-800">
+      <div className="w-full max-w-md rounded-3xl border border-white bg-white/95 p-8 shadow-[0_12px_36px_rgba(15,23,42,0.08)]">
+        <div className="flex flex-col items-center text-center">
+          {/* ミントグリーンカードロゴ */}
+          <svg
+            width="52"
+            height="52"
+            viewBox="0 0 36 36"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="4"
+              y="7"
+              width="17"
+              height="23"
+              rx="4"
+              transform="rotate(-10 4 7)"
+              fill="#E6FBF5"
+              stroke="#00C49A"
+              strokeWidth="2"
+            />
+            <rect
+              x="13"
+              y="5"
+              width="18"
+              height="24"
+              rx="4"
+              transform="rotate(6 13 5)"
+              fill="#FFFFFF"
+              stroke="#00C49A"
+              strokeWidth="2.2"
+            />
+            <path
+              d="M21.2 12.2C21.2 12.2 17.4 15.8 17.4 18.1C17.4 19.4 18.4 20.3 19.6 20.3C20.2 20.3 20.8 20 21.1 19.5L20.4 21.8H22.2L21.5 19.5C21.8 20 22.3 20.3 23.0 20.3C24.2 20.3 25.2 19.4 25.2 18.1C25.2 15.8 21.2 12.2 21.2 12.2Z"
+              fill="#1E293B"
+            />
+          </svg>
+
+          <h1 className="mt-3 text-2xl font-black tracking-tight text-slate-900">
+            TAG <span className="text-[#00C49A]">MATE</span>
           </h1>
-          <p className="mt-1.5 text-xs text-zinc-400">
-            勝つための出会いを、ここから。
+          <p className="mt-1.5 text-xs font-bold text-slate-500">
+            ポーカーの相方を見つけよう！
           </p>
         </div>
 
         {errorMsg && (
-          <div className="mt-4 rounded-xl border border-red-700/50 bg-red-950/60 px-4 py-3 text-xs text-red-200">
+          <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-600">
             {errorMsg}
           </div>
         )}
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-7 space-y-3">
           {/* Googleログイン */}
           <button
             type="button"
             disabled={loadingProvider !== null}
             onClick={() => handleOAuthLogin('google')}
-            className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-white px-4 py-3 text-sm font-bold text-zinc-950 transition hover:bg-zinc-200 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-[#00D69F] to-[#00B88D] px-5 py-3.5 text-sm font-extrabold text-white shadow-[0_6px_18px_rgba(0,196,154,0.35)] transition hover:opacity-95 disabled:opacity-50"
           >
             <span>{loadingProvider === 'google' ? '接続中...' : 'Googleでログイン'}</span>
           </button>
@@ -64,7 +100,7 @@ export default function LoginPage() {
             type="button"
             disabled={loadingProvider !== null}
             onClick={() => handleOAuthLogin('x')}
-            className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-bold text-white transition hover:bg-zinc-800 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2.5 rounded-full border border-slate-200 bg-slate-900 px-5 py-3.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
           >
             <svg
               width="16"
@@ -79,8 +115,8 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <p className="mt-6 text-center text-[11px] leading-relaxed text-zinc-500">
-          ログインすることで、ポーカーのタッグ戦・チーム戦の相方募集およびマッチング機能を利用できます。
+        <p className="mt-6 text-center text-[11px] leading-relaxed text-slate-400">
+          イベントで一緒に楽しめるパートナーが見つかるマッチングサービス（出会い目的禁止）
         </p>
       </div>
     </main>

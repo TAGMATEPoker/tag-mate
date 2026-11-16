@@ -10,6 +10,8 @@ type Profile = {
   name: string;
   x_username: string | null;
   avatar_url: string | null;
+  age_group: string | null;
+  gender: string | null;
   area: string | null;
   experience: string | null;
   play_type: string | null;
@@ -20,6 +22,7 @@ type EventItem = {
   id: string;
   title: string;
   event_date: string | null;
+  start_time: string | null;
   shop_name: string | null;
   is_official: boolean;
 };
@@ -152,32 +155,32 @@ export default function MatchesPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
+      <main className="flex min-h-screen items-center justify-center bg-[#F4F8FB] text-slate-600">
         読み込み中...
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-4 py-6 text-white">
-      <div className="mx-auto max-w-3xl space-y-6">
+    <main className="min-h-screen bg-gradient-to-b from-[#E6F7F4] via-[#F4F8FB] to-[#F4F8FB] px-4 py-6 text-slate-800">
+      <div className="mx-auto max-w-2xl space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold text-emerald-400">成立したマッチング</h1>
-            <p className="mt-0.5 text-xs text-zinc-400">
+            <h1 className="text-xl font-black text-slate-900">成立したマッチング</h1>
+            <p className="mt-0.5 text-xs text-slate-500">
               マッチング成立相手のXアカウントへここから連絡できます
             </p>
           </div>
           <Link
             href="/"
-            className="rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-zinc-200 hover:bg-zinc-800"
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-700 shadow-xs transition hover:bg-slate-50"
           >
             TOPへ戻る
           </Link>
         </div>
 
         {matchedApps.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center text-xs text-zinc-400">
+          <div className="rounded-3xl border border-slate-100 bg-white p-6 text-center text-xs text-slate-500 shadow-xs">
             まだ成立したマッチングはありません。
           </div>
         ) : (
@@ -195,12 +198,13 @@ export default function MatchesPage() {
               return (
                 <section
                   key={app.id}
-                  className="rounded-2xl border border-emerald-700/50 bg-zinc-900 p-5"
+                  className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-[0_6px_24px_rgba(15,23,42,0.05)]"
                 >
                   {/* 上部：成立日時 ＋ 連絡済み/未連絡トグル */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/90 pb-3">
-                    <span className="text-[11px] text-zinc-400">
-                      成立日時: <span className="font-medium text-zinc-200">{matchedAtLabel}</span>
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <span className="text-[11px] font-medium text-slate-500">
+                      成立日時:{' '}
+                      <span className="font-extrabold text-slate-700">{matchedAtLabel}</span>
                     </span>
 
                     <button
@@ -208,19 +212,19 @@ export default function MatchesPage() {
                       role="switch"
                       aria-checked={isContacted}
                       onClick={() => handleToggleContacted(app.id)}
-                      className={`inline-flex items-center gap-2.5 rounded-full border px-3 py-1 text-xs font-bold transition ${
+                      className={`inline-flex items-center gap-2.5 rounded-full border px-3 py-1 text-xs font-extrabold transition ${
                         isContacted
-                          ? 'border-emerald-500/50 bg-emerald-950/70 text-emerald-300'
-                          : 'border-amber-400/50 bg-amber-400/10 text-amber-300'
+                          ? 'border-emerald-200 bg-emerald-50 text-[#00A884]'
+                          : 'border-amber-200 bg-amber-50 text-amber-700'
                       }`}
                     >
                       <span
                         className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-                          isContacted ? 'bg-emerald-500' : 'bg-zinc-700'
+                          isContacted ? 'bg-[#00C49A]' : 'bg-slate-300'
                         }`}
                       >
                         <span
-                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs transition-transform ${
                             isContacted ? 'translate-x-4.5' : 'translate-x-1'
                           }`}
                         />
@@ -231,41 +235,49 @@ export default function MatchesPage() {
 
                   {/* 下部：相手情報 ＋ Xリンク */}
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3.5">
                       {partner?.avatar_url ? (
                         <img
                           src={partner.avatar_url}
                           alt={partner.name}
-                          className="h-12 w-12 rounded-full border border-zinc-700 object-cover"
+                          className="h-14 w-14 rounded-full border-2 border-emerald-100 object-cover shadow-xs"
                         />
                       ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 text-sm font-bold text-zinc-300">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#00D09C] to-[#00A884] text-base font-black text-white shadow-xs">
                           {(partner?.name || 'P').slice(0, 1)}
                         </div>
                       )}
 
                       <div>
-                        <p className="text-base font-bold text-white">
-                          {partner?.name || 'プレイヤー'}
-                        </p>
-                        <p className="text-xs text-zinc-400">
-                          イベント：{ev?.title || 'イベント未定'}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-base font-extrabold text-slate-900">
+                            {partner?.name || 'プレイヤー'}
+                          </p>
+                          {(partner?.age_group || partner?.gender) && (
+                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600">
+                              {partner?.age_group || '非公開'}・{partner?.gender || '非公開'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-xs font-bold text-[#00A884]">
+                          📅 {ev?.title || 'イベント未定'}
                           {ev?.event_date ? `（${ev.event_date}）` : ''}
+                          {ev?.start_time ? ` ${ev.start_time}〜` : ''}
                         </p>
-                        <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] text-zinc-300">
+                        <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] font-bold">
                           {partner?.area && (
-                            <span className="rounded bg-zinc-950 px-2 py-0.5">
-                              {partner.area}
+                            <span className="rounded-full bg-indigo-50/80 px-2.5 py-0.5 text-indigo-600">
+                              #{partner.area}
                             </span>
                           )}
                           {partner?.experience && (
-                            <span className="rounded bg-zinc-950 px-2 py-0.5">
-                              歴 {partner.experience}
+                            <span className="rounded-full bg-indigo-50/80 px-2.5 py-0.5 text-indigo-600">
+                              #歴{partner.experience}
                             </span>
                           )}
-                          {partner?.play_type && (
-                            <span className="rounded bg-zinc-950 px-2 py-0.5 text-emerald-300">
-                              {partner.play_type}
+                          {partner?.stance && (
+                            <span className="rounded-full bg-indigo-50/80 px-2.5 py-0.5 text-indigo-600">
+                              #{partner.stance}
                             </span>
                           )}
                         </div>
@@ -278,12 +290,12 @@ export default function MatchesPage() {
                           href={`https://x.com/${cleanX}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-extrabold text-zinc-950 transition hover:bg-emerald-400"
+                          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#00D69F] to-[#00B88D] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_4px_14px_rgba(0,196,154,0.35)] transition hover:opacity-95"
                         >
-                          <span>X (@{cleanX}) を開く</span>
+                          <span>X (@{cleanX}) を開く &gt;</span>
                         </a>
                       ) : (
-                        <span className="rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2 text-xs text-zinc-400">
+                        <span className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-400">
                           X ID未登録
                         </span>
                       )}

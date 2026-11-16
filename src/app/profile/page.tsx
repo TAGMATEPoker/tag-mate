@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 const AGE_GROUPS = ['10代', '20代', '30代', '40代', '50代', '60代', '非公開'];
@@ -158,227 +159,221 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
+      <main className="flex min-h-screen items-center justify-center bg-[#F4F8FB] text-slate-600">
         読み込み中...
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-4 py-8 text-white">
-      <div className="mx-auto max-w-xl rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-        <div>
-          <h1 className="text-xl font-bold text-emerald-400">プロフィール設定</h1>
-          <p className="mt-1 text-xs text-zinc-400">
-            ※XのIDはマッチ成立後に相手へ共有されます（募集時は非公開）
-          </p>
+    <main className="min-h-screen bg-gradient-to-b from-[#E6F7F4] via-[#F4F8FB] to-[#F4F8FB] px-4 py-6 text-slate-800">
+      <div className="mx-auto max-w-xl space-y-5">
+        {/* 上部ナビ */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-xs transition hover:bg-slate-50"
+            aria-label="戻る"
+          >
+            &lt;
+          </Link>
+          <span className="text-xs font-extrabold text-slate-500">マイページ設定</span>
+          <div className="w-9" />
         </div>
 
-        <form onSubmit={handleSave} className="mt-6 space-y-4">
-          {/* アイコン画像アップロード */}
-          <div className="flex items-center gap-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt="アイコン"
-                className="h-16 w-16 rounded-full border border-zinc-700 object-cover"
-              />
-            ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 text-xs text-zinc-400">
-                未設定
-              </div>
-            )}
-            <div className="flex-1 space-y-1.5">
-              <label className="block text-xs font-semibold text-zinc-200">
-                プロフィールアイコン（画像アップロード）
-              </label>
-              <label className="inline-block cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700">
-                {uploadingAvatar ? 'アップロード中...' : '画像を選択して変更'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  disabled={uploadingAvatar}
-                  onChange={handleAvatarUpload}
-                  className="hidden"
+        <div className="rounded-3xl border border-white/80 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+          <div>
+            <h1 className="text-xl font-black text-slate-900">プロフィール編集</h1>
+            <p className="mt-1 text-xs text-slate-500">
+              ※XのIDはマッチ成立後に相手へ共有されます（募集時は非公開）
+            </p>
+          </div>
+
+          <form onSubmit={handleSave} className="mt-6 space-y-4">
+            {/* アイコン画像アップロード */}
+            <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="アイコン"
+                  className="h-16 w-16 rounded-full border-2 border-white object-cover shadow-sm"
                 />
-              </label>
-              <p className="text-[11px] text-zinc-400">PNG / JPG / WEBP（5MB以下）</p>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-zinc-300">プレイヤーネーム *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="例：タッグ太郎"
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-zinc-300">X (Twitter) ユーザー名 *</label>
-            <input
-              type="text"
-              value={xUsername}
-              onChange={(e) => setXUsername(e.target.value)}
-              placeholder="例：poker_tag_taro（@なしでも可）"
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-            />
-          </div>
-
-          {/* 年齢・性別 */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs text-zinc-300">年齢</label>
-              <select
-                value={ageGroup}
-                onChange={(e) => setAgeGroup(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-              >
-                {AGE_GROUPS.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#00D09C] to-[#00A884] text-xs font-extrabold text-white shadow-sm">
+                  未設定
+                </div>
+              )}
+              <div className="flex-1 space-y-1.5">
+                <label className="block text-xs font-extrabold text-slate-700">
+                  プロフィールアイコン
+                </label>
+                <label className="inline-block cursor-pointer rounded-full border border-emerald-200 bg-white px-4 py-1.5 text-xs font-bold text-[#00A884] shadow-xs transition hover:bg-emerald-50">
+                  {uploadingAvatar ? 'アップロード中...' : '画像を選択して変更'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingAvatar}
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </label>
+                <p className="text-[11px] text-slate-400">PNG / JPG / WEBP（5MB以下）</p>
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs text-zinc-300">性別</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-              >
-                {GENDERS.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs text-zinc-300">活動地域</label>
-              <select
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-              >
-                {AREAS.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300">ポーカー歴</label>
-              <select
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-              >
-                {EXPERIENCES.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs text-zinc-300">プレイタイプ</label>
-              <select
-                value={playType}
-                onChange={(e) => setPlayType(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-              >
-                {PLAY_TYPES.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300">スタイル</label>
-              <select
-                value={stance}
-                onChange={(e) => setStance(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-              >
-                {STANCES.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs text-zinc-300">よくいく店舗</label>
+              <label className="block text-xs font-bold text-slate-600">プレイヤーネーム *</label>
               <input
                 type="text"
-                value={homeShop}
-                onChange={(e) => setHomeShop(e.target.value)}
-                placeholder="例：〇〇ポーカーギルド"
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="例：タッグ太郎"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-zinc-300">求める相手</label>
-              <select
-                value={targetType}
-                onChange={(e) => setTargetType(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-              >
-                {TARGET_TYPES.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-xs font-bold text-slate-600">
+                X (Twitter) ユーザー名 *
+              </label>
+              <input
+                type="text"
+                value={xUsername}
+                onChange={(e) => setXUsername(e.target.value)}
+                placeholder="例：poker_tag_taro（@なしでも可）"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+              />
             </div>
-          </div>
 
-          <div>
-            <label className="block text-xs text-zinc-300">一言コメント</label>
-            <textarea
-              rows={3}
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="例：楽しく真剣にタッグ戦を打ちたいです！エントリー代折半など相談しましょう。"
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-            />
-          </div>
+            {/* 年齢・性別 */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-600">年齢</label>
+                <select
+                  value={ageGroup}
+                  onChange={(e) => setAgeGroup(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+                >
+                  {AGE_GROUPS.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {message && (
-            <p className="rounded-lg bg-zinc-800 px-3 py-2 text-xs text-emerald-300">
-              {message}
-            </p>
-          )}
+              <div>
+                <label className="block text-xs font-bold text-slate-600">性別</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+                >
+                  {GENDERS.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            disabled={saving || uploadingAvatar}
-            className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:opacity-50"
-          >
-            {saving ? '保存中...' : 'プロフィールを保存'}
-          </button>
-        </form>
-      </div>
-    </main>
-  );
-}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-600">活動地域</label>
+                <select
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+                >
+                  {AREAS.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600">ポーカー歴</label>
+                <select
+                  value={experience}
+                  onChange={(e) => setExperience(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+                >
+                  {EXPERIENCES.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-600">プレイタイプ</label>
+                <select
+                  value={playType}
+                  onChange={(e) => setPlayType(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+                >
+                  {PLAY_TYPES.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600">スタイル</label>
+                <select
+                  value={stance}
+                  onChange={(e) => setStance(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+                >
+                  {STANCES.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-600">よくいく店舗</label>
+                <input
+                  type="text"
+                  value={homeShop}
+                  onChange={(e) => setHomeShop(e.target.value)}
+                  placeholder="例：〇〇ポーカーギルド"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600">求める相手</label>
+                <select
+                  value={targetType}
+                  onChange={(e) => setTargetType(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+                >
+                  {TARGET_TYPES.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600">一言コメント</label>
+              <textarea
+                rows={3}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="例：楽しく真剣にタッグ戦を打ちたいです！エントリー代折半など相談しましょう。"
