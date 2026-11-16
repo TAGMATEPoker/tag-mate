@@ -60,6 +60,21 @@ type NoticeState = {
 
 type ListTab = 'all' | 'mine' | 'applied';
 
+function getTodayJstDateString(): string {
+  const now = new Date();
+  const jstTime = now.getTime() + (now.getTimezoneOffset() + 9 * 60) * 60 * 1000;
+  const jstDate = new Date(jstTime);
+  const yyyy = jstDate.getFullYear();
+  const mm = String(jstDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(jstDate.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function isEventExpired(eventDate: string | null, todayStr: string): boolean {
+  if (!eventDate) return false;
+  return eventDate < todayStr;
+}
+
 function formatJapaneseDateHeader(dateStr: string | null): string {
   if (!dateStr) return '日程未定';
   const parts = dateStr.split('-');
@@ -134,13 +149,11 @@ function HomeContent() {
 
     setUserId(user.id);
 
-    // 最終アクセス日時を自動記録
     await supabase
       .from('profiles')
       .update({ last_active_at: new Date().toISOString() })
       .eq('id', user.id);
 
-    // 管理者アカウントはデフォルトで管理画面へ遷移（?stay=1 の場合は一般画面を表示）
     if (user.email === ADMIN_EMAIL && searchParams.get('stay') !== '1') {
       router.replace('/admin');
       return;
@@ -325,14 +338,19 @@ function HomeContent() {
     );
   }
 
+  const todayJst = getTodayJstDateString();
+
   const eventsById: Record<string, EventItem> = {};
   events.forEach((ev) => {
     eventsById[ev.id] = ev;
   });
 
+  // 開催日を過ぎたイベントを除外したイベント一覧
+  const activeEvents = events.filter((ev) => !isEventExpired(ev.event_date, todayJst));
+
   const keyword = searchKeyword.trim().toLowerCase();
 
-  const officialEvents = events.filter((ev) => {
+  const officialEvents = activeEvents.filter((ev) => {
     if (!ev.is_official) return false;
     if (!keyword) return true;
     return (
@@ -727,7 +745,7 @@ function HomeContent() {
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800"
                 >
                   <option value="">イベント未定 / 下で新しく入力</option>
-                  {events.map((ev) => (
+                  {activeEvents.map((ev) => (
                     <option key={ev.id} value={ev.id}>
                       {ev.is_official ? '【公式】' : ''}
                       {ev.title}
@@ -856,7 +874,7 @@ function HomeContent() {
 
           {groupedEventsByDate.length === 0 ? (
             <div className="rounded-3xl border border-white/80 bg-white/95 p-6 text-center text-xs text-slate-500 shadow-2xs backdrop-blur-xs">
-              該当する公式イベントはありません。
+              開催予定の公式イベントはありません。
             </div>
           ) : (
             <div className="space-y-6">
