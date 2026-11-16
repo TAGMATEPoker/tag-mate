@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Header from '@/components/Header';
+import BottomNav from '@/components/BottomNav';
 
 export const metadata: Metadata = {
-  title: 'TAG MATE | ポーカータッグ戦の相方探し専用',
-  description: 'ポーカーのタッグトーナメント・チーム戦の相方募集プラットフォーム',
+  title: 'TAG MATE | ポーカーの相方を見つけよう！',
+  description: 'イベントで一緒に楽しめるパートナーが見つかるマッチングサービス',
 };
 
 export default function RootLayout({
@@ -14,9 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className="min-h-screen bg-zinc-950 text-white antialiased">
+      <body className="min-h-screen bg-[#F4F8FB] pb-20 text-slate-800 antialiased">
         <Header />
         {children}
+        <BottomNav />
       </body>
     </html>
   );
