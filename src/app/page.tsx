@@ -635,7 +635,7 @@ function HomeContent() {
               Tagの相方を見つけよう！
             </h1>
             <p className="mt-2 text-xs leading-relaxed text-slate-600">
-              TAG MATEはTagの相方が見つかるマッチングサービスです
+              TAG MATEはTagの相方が見つかるマッチングサービス
             </p>
           </div>
 
