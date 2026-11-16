@@ -132,6 +132,18 @@ function HomeContent() {
 
     setUserId(user.id);
 
+    // 最終アクセス日時を自動記録
+    await supabase
+      .from('profiles')
+      .update({ last_active_at: new Date().toISOString() })
+      .eq('id', user.id);
+
+    // 管理者アカウントはデフォルトで管理画面へ遷移（?stay=1 の場合は一般画面を表示）
+    if (user.email === 'tagmate.info@gmail.com' && searchParams.get('stay') !== '1') {
+      router.replace('/admin');
+      return;
+    }
+
     const [
       { data: profileData },
       { data: eventsData },
