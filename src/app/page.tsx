@@ -14,11 +14,7 @@ type Profile = {
   avatar_url: string | null;
   age_group: string | null;
   gender: string | null;
-  area: string | null;
   experience: string | null;
-  play_type: string | null;
-  stance: string | null;
-  home_shop: string | null;
   target_type: string | null;
   bio: string | null;
 };
@@ -324,12 +320,6 @@ function HomeContent() {
     }));
   };
 
-  const formatShortPlayType = (playType: string | null) => {
-    if (!playType) return null;
-    const match = playType.match(/^([A-Z]+)/);
-    return match ? match[1] : playType;
-  };
-
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-transparent text-slate-600">
@@ -345,7 +335,6 @@ function HomeContent() {
     eventsById[ev.id] = ev;
   });
 
-  // 開催日を過ぎたイベントを除外したイベント一覧
   const activeEvents = events.filter((ev) => !isEventExpired(ev.event_date, todayJst));
 
   const keyword = searchKeyword.trim().toLowerCase();
@@ -401,7 +390,7 @@ function HomeContent() {
     const ev = r.event_id ? eventsById[r.event_id] : null;
     return (
       (author?.name || '').toLowerCase().includes(keyword) ||
-      (author?.area || '').toLowerCase().includes(keyword) ||
+      (author?.target_type || '').toLowerCase().includes(keyword) ||
       (ev?.title || '').toLowerCase().includes(keyword) ||
       (r.comment || '').toLowerCase().includes(keyword)
     );
@@ -480,16 +469,6 @@ function HomeContent() {
                       #歴{author.experience}
                     </span>
                   )}
-                  {author.play_type && (
-                    <span className="rounded-full bg-indigo-50/80 px-2.5 py-0.5 text-indigo-600">
-                      #{formatShortPlayType(author.play_type)}
-                    </span>
-                  )}
-                  {author.stance && (
-                    <span className="rounded-full bg-indigo-50/80 px-2.5 py-0.5 text-indigo-600">
-                      #{author.stance}
-                    </span>
-                  )}
                   {author.target_type && (
                     <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[#00A884]">
                       #{author.target_type}
@@ -514,16 +493,9 @@ function HomeContent() {
         {author && isProfileOpen && (
           <div className="mt-3.5 space-y-2.5 rounded-2xl border border-slate-100 bg-slate-50/90 p-4 text-xs">
             <div className="flex items-center justify-between border-b border-slate-200/70 pb-2">
-              <span className="font-bold text-slate-500">♠ プレイスタイル</span>
+              <span className="font-bold text-slate-500">♠ ポーカー歴</span>
               <span className="font-extrabold text-slate-800">
-                {author.play_type || '未設定'} / {author.stance || '未設定'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between border-b border-slate-200/70 pb-2">
-              <span className="font-bold text-slate-500">📍 活動エリア</span>
-              <span className="font-extrabold text-slate-800">
-                {author.area || '未設定'}
-                {author.home_shop ? `（${author.home_shop}）` : ''}
+                {author.experience || '未設定'}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -605,7 +577,7 @@ function HomeContent() {
                       </span>
                       <span className="ml-2 text-slate-500">
                         ({applicant?.age_group || '非公開'}・{applicant?.gender || '非公開'} /{' '}
-                        {applicant?.experience} / {formatShortPlayType(applicant?.play_type || null)})
+                        {applicant?.experience || '歴未設定'})
                       </span>
                     </div>
                     {app.status === 'pending' ? (
@@ -660,12 +632,10 @@ function HomeContent() {
 
           <div className="mt-4">
             <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl">
-              ポーカーの
-              <br />
-              <span className="text-[#00C49A]">相方</span>を見つけよう！
+              Tagの相方を見つけよう！
             </h1>
             <p className="mt-2 text-xs leading-relaxed text-slate-600">
-              イベントで一緒に楽しめるパートナーが見つかるマッチングサービス
+              TAG MATEはTagの相方が見つかるマッチングサービスです
             </p>
           </div>
 
