@@ -123,13 +123,26 @@ function HomeContent() {
     if (tabParam === 'mine' || tabParam === 'applied' || tabParam === 'all') {
       setActiveTab(tabParam);
       setFilterEventId(null);
-      if (tabParam === 'mine' || tabParam === 'applied') {
-        setTimeout(() => {
-          document
-            .getElementById('recruitment-list-section')
-            ?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
+    }
+
+    const viewParam = searchParams.get('view');
+    if (viewParam === 'events') {
+      setFilterEventId(null);
+      setTimeout(() => {
+        document
+          .getElementById('event-list-section')
+          ?.scrollIntoView({ behavior: 'smooth' });
+      }, 80);
+    } else if (viewParam === 'search') {
+      setTimeout(() => {
+        const input = document.getElementById('home-search-input') as HTMLInputElement | null;
+        input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input?.focus();
+      }, 80);
+    } else if (!viewParam || viewParam === 'home') {
+      setFilterEventId(null);
+      setExpandedEventId(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [searchParams]);
 
@@ -615,7 +628,6 @@ function HomeContent() {
   return (
     <main className="min-h-screen bg-transparent px-4 py-6 text-slate-800">
       <div className="mx-auto max-w-2xl space-y-7">
-        {/* ヒーローセクション */}
         <section className="relative overflow-hidden rounded-3xl border border-white/80 bg-white/90 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xs">
           <div className="flex items-center justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-[11px] font-bold text-slate-600 shadow-2xs">
@@ -635,7 +647,7 @@ function HomeContent() {
               Tagの相方を見つけよう！
             </h1>
             <p className="mt-2 text-xs leading-relaxed text-slate-600">
-              TAG MATEはTagの相方が見つかるマッチングサービス
+              TAG MATEはTagの相方が見つかるマッチングサービスです
             </p>
           </div>
 
@@ -656,9 +668,9 @@ function HomeContent() {
           </div>
         </section>
 
-        {/* 検索バー */}
         <div className="relative">
           <input
+            id="home-search-input"
             type="text"
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
@@ -670,7 +682,6 @@ function HomeContent() {
           </span>
         </div>
 
-        {/* 通知バナー */}
         {notice &&
           (notice.href ? (
             <Link
@@ -687,11 +698,10 @@ function HomeContent() {
 
         {!myProfile && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50/95 p-4 text-xs font-semibold text-amber-800">
-            募集の投稿や「気になる」送信を行う前に、右上メニューの「プロフィール編集」からプロフィールを保存してください。
+            募集の投稿や「気になる」送信を行う前に、「マイページ」からプロフィールを保存してください。
           </div>
         )}
 
-        {/* 新規相方募集フォーム */}
         {showRecruitmentForm && (
           <section className="rounded-3xl border border-white/80 bg-white/95 p-6 shadow-md backdrop-blur-xs">
             <div className="flex items-center justify-between gap-2">
@@ -833,7 +843,6 @@ function HomeContent() {
           </section>
         )}
 
-        {/* 開催予定のイベント一覧 */}
         <section id="event-list-section" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-base font-extrabold text-slate-900">
@@ -972,7 +981,6 @@ function HomeContent() {
           )}
         </section>
 
-        {/* 相方募集一覧 */}
         <section id="recruitment-list-section" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
