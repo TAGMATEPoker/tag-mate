@@ -7,17 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 
 const AGE_GROUPS = ['10代', '20代', '30代', '40代', '50代', '60代', '非公開'];
 const GENDERS = ['男性', '女性', '非公開'];
-const AREAS = ['東京都', '神奈川県', '埼玉県', '千葉県', '大阪府', '愛知県', '福岡県', 'その他'];
 const EXPERIENCES = ['1年未満', '1〜3年', '3〜5年', '5年以上'];
-const PLAY_TYPES = [
-  'TAG（タイトアグレッシブ）',
-  'LAG（ルースアグレッシブ）',
-  'タイトパッシブ',
-  'ルースパッシブ',
-  'バランス型',
-];
-const STANCES = ['ガチ勢', 'エンジョイ勢', '勉強中'];
-const TARGET_TYPES = ['ガチ勢', 'エンジョイ勢', '初心者OK', '誰でも歓迎'];
+const TARGET_TYPES = ['誰でも歓迎', '初心者OK', 'ガチ勢求む', '飲みポしましょ'];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -34,11 +25,7 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [ageGroup, setAgeGroup] = useState('非公開');
   const [gender, setGender] = useState('非公開');
-  const [area, setArea] = useState('東京都');
   const [experience, setExperience] = useState('1〜3年');
-  const [playType, setPlayType] = useState('TAG（タイトアグレッシブ）');
-  const [stance, setStance] = useState('エンジョイ勢');
-  const [homeShop, setHomeShop] = useState('');
   const [targetType, setTargetType] = useState('誰でも歓迎');
   const [bio, setBio] = useState('');
 
@@ -67,12 +54,10 @@ export default function ProfilePage() {
         setAvatarUrl(profile.avatar_url || user.user_metadata?.avatar_url || '');
         setAgeGroup(profile.age_group || '非公開');
         setGender(profile.gender || '非公開');
-        setArea(profile.area || '東京都');
         setExperience(profile.experience || '1〜3年');
-        setPlayType(profile.play_type || 'TAG（タイトアグレッシブ）');
-        setStance(profile.stance || 'エンジョイ勢');
-        setHomeShop(profile.home_shop || '');
-        setTargetType(profile.target_type || '誰でも歓迎');
+        setTargetType(
+          TARGET_TYPES.includes(profile.target_type) ? profile.target_type : '誰でも歓迎'
+        );
         setBio(profile.bio || '');
       } else {
         setName(user.user_metadata?.full_name || '');
@@ -145,11 +130,7 @@ export default function ProfilePage() {
       avatar_url: avatarUrl.trim() || null,
       age_group: ageGroup,
       gender,
-      area,
       experience,
-      play_type: playType,
-      stance,
-      home_shop: homeShop.trim(),
       target_type: targetType,
       bio: bio.trim(),
       last_active_at: new Date().toISOString(),
@@ -284,21 +265,6 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold text-slate-600">活動地域</label>
-                <select
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
-                >
-                  {AREAS.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-xs font-bold text-slate-600">ポーカー歴</label>
                 <select
                   value={experience}
@@ -311,51 +277,6 @@ export default function ProfilePage() {
                     </option>
                   ))}
                 </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-bold text-slate-600">プレイタイプ</label>
-                <select
-                  value={playType}
-                  onChange={(e) => setPlayType(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
-                >
-                  {PLAY_TYPES.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-600">スタイル</label>
-                <select
-                  value={stance}
-                  onChange={(e) => setStance(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
-                >
-                  {STANCES.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-bold text-slate-600">よくいく店舗</label>
-                <input
-                  type="text"
-                  value={homeShop}
-                  onChange={(e) => setHomeShop(e.target.value)}
-                  placeholder="例：〇〇ポーカーギルド"
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
-                />
               </div>
 
               <div>
