@@ -155,14 +155,14 @@ export default function MatchesPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F4F8FB] text-slate-600">
+      <main className="flex min-h-screen items-center justify-center bg-transparent text-slate-600">
         読み込み中...
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#E6F7F4] via-[#F4F8FB] to-[#F4F8FB] px-4 py-6 text-slate-800">
+    <main className="min-h-screen bg-transparent px-4 py-6 text-slate-800">
       <div className="mx-auto max-w-2xl space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -173,14 +173,14 @@ export default function MatchesPage() {
           </div>
           <Link
             href="/"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-700 shadow-xs transition hover:bg-slate-50"
+            className="rounded-full border border-white/80 bg-white/95 px-4 py-2 text-xs font-extrabold text-slate-700 shadow-2xs transition hover:bg-white"
           >
             TOPへ戻る
           </Link>
         </div>
 
         {matchedApps.length === 0 ? (
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 text-center text-xs text-slate-500 shadow-xs">
+          <div className="rounded-3xl border border-white/80 bg-white/95 p-6 text-center text-xs text-slate-500 shadow-2xs backdrop-blur-xs">
             まだ成立したマッチングはありません。
           </div>
         ) : (
@@ -198,9 +198,8 @@ export default function MatchesPage() {
               return (
                 <section
                   key={app.id}
-                  className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-[0_6px_24px_rgba(15,23,42,0.05)]"
+                  className="rounded-3xl border border-white/80 bg-white/95 p-5 shadow-[0_6px_24px_rgba(15,23,42,0.05)] backdrop-blur-xs"
                 >
-                  {/* 上部：成立日時 ＋ 連絡済み/未連絡トグル */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <span className="text-[11px] font-medium text-slate-500">
                       成立日時:{' '}
@@ -224,7 +223,7 @@ export default function MatchesPage() {
                         }`}
                       >
                         <span
-                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs transition-transform ${
+                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-2xs transition-transform ${
                             isContacted ? 'translate-x-4.5' : 'translate-x-1'
                           }`}
                         />
@@ -233,17 +232,16 @@ export default function MatchesPage() {
                     </button>
                   </div>
 
-                  {/* 下部：相手情報 ＋ Xリンク */}
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-3.5">
                       {partner?.avatar_url ? (
                         <img
                           src={partner.avatar_url}
                           alt={partner.name}
-                          className="h-14 w-14 rounded-full border-2 border-emerald-100 object-cover shadow-xs"
+                          className="h-14 w-14 rounded-full border-2 border-emerald-100 object-cover shadow-2xs"
                         />
                       ) : (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#00D09C] to-[#00A884] text-base font-black text-white shadow-xs">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#00D09C] to-[#00A884] text-base font-black text-white shadow-2xs">
                           {(partner?.name || 'P').slice(0, 1)}
                         </div>
                       )}

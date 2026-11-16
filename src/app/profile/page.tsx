@@ -146,6 +146,7 @@ export default function ProfilePage() {
       home_shop: homeShop.trim(),
       target_type: targetType,
       bio: bio.trim(),
+      last_active_at: new Date().toISOString(),
     });
 
     if (error) {
@@ -159,29 +160,28 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F4F8FB] text-slate-600">
+      <main className="flex min-h-screen items-center justify-center bg-transparent text-slate-600">
         読み込み中...
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#E6F7F4] via-[#F4F8FB] to-[#F4F8FB] px-4 py-6 text-slate-800">
+    <main className="min-h-screen bg-transparent px-4 py-6 text-slate-800">
       <div className="mx-auto max-w-xl space-y-5">
-        {/* 上部ナビ */}
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-xs transition hover:bg-slate-50"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-white/95 text-slate-700 shadow-2xs transition hover:bg-white"
             aria-label="戻る"
           >
             &lt;
           </Link>
-          <span className="text-xs font-extrabold text-slate-500">マイページ設定</span>
+          <span className="text-xs font-extrabold text-slate-600">マイページ設定</span>
           <div className="w-9" />
         </div>
 
-        <div className="rounded-3xl border border-white/80 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+        <div className="rounded-3xl border border-white/80 bg-white/95 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xs">
           <div>
             <h1 className="text-xl font-black text-slate-900">プロフィール編集</h1>
             <p className="mt-1 text-xs text-slate-500">
@@ -190,16 +190,15 @@ export default function ProfilePage() {
           </div>
 
           <form onSubmit={handleSave} className="mt-6 space-y-4">
-            {/* アイコン画像アップロード */}
             <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt="アイコン"
-                  className="h-16 w-16 rounded-full border-2 border-white object-cover shadow-sm"
+                  className="h-16 w-16 rounded-full border-2 border-white object-cover shadow-2xs"
                 />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#00D09C] to-[#00A884] text-xs font-extrabold text-white shadow-sm">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#00D09C] to-[#00A884] text-xs font-extrabold text-white shadow-2xs">
                   未設定
                 </div>
               )}
@@ -207,7 +206,7 @@ export default function ProfilePage() {
                 <label className="block text-xs font-extrabold text-slate-700">
                   プロフィールアイコン
                 </label>
-                <label className="inline-block cursor-pointer rounded-full border border-emerald-200 bg-white px-4 py-1.5 text-xs font-bold text-[#00A884] shadow-xs transition hover:bg-emerald-50">
+                <label className="inline-block cursor-pointer rounded-full border border-emerald-200 bg-white px-4 py-1.5 text-xs font-bold text-[#00A884] shadow-2xs transition hover:bg-emerald-50">
                   {uploadingAvatar ? 'アップロード中...' : '画像を選択して変更'}
                   <input
                     type="file"
@@ -245,7 +244,6 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* 年齢・性別 */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-bold text-slate-600">年齢</label>
@@ -377,3 +375,26 @@ export default function ProfilePage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="例：楽しく真剣にタッグ戦を打ちたいです！エントリー代折半など相談しましょう。"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-[#00C49A] focus:bg-white"
+              />
+            </div>
+
+            {message && (
+              <p className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700">
+                {message}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={saving || uploadingAvatar}
+              className="w-full rounded-full bg-gradient-to-r from-[#00D69F] to-[#00B88D] px-5 py-3.5 text-sm font-extrabold text-white shadow-[0_6px_18px_rgba(0,196,154,0.35)] transition hover:opacity-95 disabled:opacity-50"
+            >
+              {saving ? '保存中...' : 'プロフィールを保存'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+  );
+}

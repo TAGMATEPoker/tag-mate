@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
+const ADMIN_EMAIL = 'tagmate.info@gmail.com';
+
 type Profile = {
   id: string;
   name: string;
@@ -139,7 +141,7 @@ function HomeContent() {
       .eq('id', user.id);
 
     // 管理者アカウントはデフォルトで管理画面へ遷移（?stay=1 の場合は一般画面を表示）
-    if (user.email === 'tagmate.info@gmail.com' && searchParams.get('stay') !== '1') {
+    if (user.email === ADMIN_EMAIL && searchParams.get('stay') !== '1') {
       router.replace('/admin');
       return;
     }
@@ -317,7 +319,7 @@ function HomeContent() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F4F8FB] text-slate-600">
+      <main className="flex min-h-screen items-center justify-center bg-transparent text-slate-600">
         読み込み中...
       </main>
     );
@@ -330,7 +332,6 @@ function HomeContent() {
 
   const keyword = searchKeyword.trim().toLowerCase();
 
-  // 公式イベント検索＆日付ごとグループ化
   const officialEvents = events.filter((ev) => {
     if (!ev.is_official) return false;
     if (!keyword) return true;
@@ -407,9 +408,8 @@ function HomeContent() {
     return (
       <article
         key={rec.id}
-        className="rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_6px_24px_rgba(15,23,42,0.05)]"
+        className="rounded-3xl border border-white/80 bg-white/95 p-5 shadow-[0_6px_24px_rgba(15,23,42,0.05)] backdrop-blur-xs"
       >
-        {/* 対象イベントピル */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-[#00A884]">
             <span>📅</span>
@@ -426,7 +426,6 @@ function HomeContent() {
           )}
         </div>
 
-        {/* 投稿者ヘッダー */}
         <div className="mt-3.5 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             {author?.avatar_url ? (
@@ -456,7 +455,6 @@ function HomeContent() {
                 )}
               </div>
 
-              {/* ハッシュタグ風ステータスバッジ（添付3枚目風） */}
               {author && (
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
                   {author.experience && (
@@ -495,7 +493,6 @@ function HomeContent() {
           )}
         </div>
 
-        {/* 開閉式詳細プロフィール（添付3枚目の情報カード風） */}
         {author && isProfileOpen && (
           <div className="mt-3.5 space-y-2.5 rounded-2xl border border-slate-100 bg-slate-50/90 p-4 text-xs">
             <div className="flex items-center justify-between border-b border-slate-200/70 pb-2">
@@ -525,14 +522,12 @@ function HomeContent() {
           </div>
         )}
 
-        {/* 募集コメント */}
         {rec.comment && (
           <p className="mt-3.5 rounded-2xl bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-700">
             {rec.comment}
           </p>
         )}
 
-        {/* アクションバー */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-1">
           <span className="text-xs font-medium text-slate-400">
             {isMine
@@ -573,7 +568,6 @@ function HomeContent() {
           )}
         </div>
 
-        {/* 自分の募集に届いた「気になる」一覧 */}
         {isMine && incomingApps.length > 0 && (
           <div className="mt-4 border-t border-slate-100 pt-3">
             <p className="text-xs font-bold text-slate-600">
@@ -629,18 +623,18 @@ function HomeContent() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#E6F7F4] via-[#F4F8FB] to-[#F4F8FB] px-4 py-6 text-slate-800">
+    <main className="min-h-screen bg-transparent px-4 py-6 text-slate-800">
       <div className="mx-auto max-w-2xl space-y-7">
-        {/* ヒーローセクション（添付1枚目風） */}
-        <section className="relative overflow-hidden rounded-3xl border border-white/80 bg-gradient-to-br from-[#EAFBF6] via-white to-[#EEF5FF] p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+        {/* ヒーローセクション */}
+        <section className="relative overflow-hidden rounded-3xl border border-white/80 bg-white/90 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xs">
           <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold text-slate-600 shadow-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-[11px] font-bold text-slate-600 shadow-2xs">
               <span className="h-2 w-2 rounded-full bg-[#00C49A]" />
               {myProfile ? `${myProfile.name} さんログイン中` : 'プロフィール未設定'}
             </span>
             <Link
               href="/matches"
-              className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold text-[#00A884] shadow-xs hover:bg-white"
+              className="rounded-full bg-emerald-50/80 px-3 py-1 text-[11px] font-bold text-[#00A884] hover:bg-emerald-50"
             >
               マッチ一覧 ({matchedApplications.length}) &gt;
             </Link>
@@ -667,21 +661,21 @@ function HomeContent() {
             <button
               type="button"
               onClick={() => setShowRecruitmentForm((prev) => !prev)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-emerald-200 bg-white px-5 py-3 text-sm font-extrabold text-[#00A884] shadow-sm transition hover:bg-emerald-50"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-emerald-200 bg-white px-5 py-3 text-sm font-extrabold text-[#00A884] shadow-2xs transition hover:bg-emerald-50"
             >
               <span>＋ 相方を募集</span>
             </button>
           </div>
         </section>
 
-        {/* 検索バー（添付2枚目風） */}
+        {/* 検索バー */}
         <div className="relative">
           <input
             type="text"
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             placeholder="イベント・店舗・エリアで検索..."
-            className="w-full rounded-full border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-800 shadow-xs outline-none placeholder:text-slate-400 focus:border-[#00C49A]"
+            className="w-full rounded-full border border-white/80 bg-white/95 py-3 pl-11 pr-4 text-sm text-slate-800 shadow-2xs outline-none backdrop-blur-xs placeholder:text-slate-400 focus:border-[#00C49A]"
           />
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
             🔍
@@ -693,25 +687,25 @@ function HomeContent() {
           (notice.href ? (
             <Link
               href={notice.href}
-              className="block rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs font-extrabold text-emerald-800 shadow-sm transition hover:bg-emerald-100"
+              className="block rounded-2xl border border-emerald-300 bg-emerald-50/95 px-4 py-3 text-xs font-extrabold text-emerald-800 shadow-2xs transition hover:bg-emerald-100"
             >
               {notice.text}
             </Link>
           ) : (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-800">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/95 px-4 py-3 text-xs font-bold text-emerald-800">
               {notice.text}
             </div>
           ))}
 
         {!myProfile && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-semibold text-amber-800">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50/95 p-4 text-xs font-semibold text-amber-800">
             募集の投稿や「気になる」送信を行う前に、右上メニューの「プロフィール編集」からプロフィールを保存してください。
           </div>
         )}
 
         {/* 新規相方募集フォーム */}
         {showRecruitmentForm && (
-          <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-md">
+          <section className="rounded-3xl border border-white/80 bg-white/95 p-6 shadow-md backdrop-blur-xs">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-base font-extrabold text-slate-900">相方募集を投稿する</h2>
               <button
@@ -835,7 +829,7 @@ function HomeContent() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-full bg-[#00C49A] px-6 py-2.5 text-sm font-extrabold text-white shadow-sm hover:bg-[#00B38B] disabled:opacity-50"
+                  className="rounded-full bg-[#00C49A] px-6 py-2.5 text-sm font-extrabold text-white shadow-2xs hover:bg-[#00B38B] disabled:opacity-50"
                 >
                   {submitting ? '投稿中...' : '募集を投稿'}
                 </button>
@@ -851,7 +845,7 @@ function HomeContent() {
           </section>
         )}
 
-        {/* 開催予定のイベント一覧（日付ごとに線で区切り＋開催日時・受付終了・詳細URL） */}
+        {/* 開催予定のイベント一覧 */}
         <section id="event-list-section" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-base font-extrabold text-slate-900">
@@ -861,23 +855,21 @@ function HomeContent() {
           </div>
 
           {groupedEventsByDate.length === 0 ? (
-            <div className="rounded-3xl border border-slate-100 bg-white p-6 text-center text-xs text-slate-500 shadow-xs">
+            <div className="rounded-3xl border border-white/80 bg-white/95 p-6 text-center text-xs text-slate-500 shadow-2xs backdrop-blur-xs">
               該当する公式イベントはありません。
             </div>
           ) : (
             <div className="space-y-6">
               {groupedEventsByDate.map((group) => (
                 <div key={group.dateKey} className="space-y-3">
-                  {/* 日付ごとの区切りヘッダー＆水平線 */}
                   <div className="flex items-center gap-3">
                     <span className="shrink-0 rounded-full bg-slate-800 px-3.5 py-1 text-xs font-extrabold text-white">
                       {group.label}
                     </span>
-                    <div className="h-px flex-1 bg-slate-200" />
+                    <div className="h-px flex-1 bg-slate-300/80" />
                   </div>
 
-                  {/* その日付のイベントカード群 */}
-                  <div className="divide-y divide-slate-100 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_6px_24px_rgba(15,23,42,0.05)]">
+                  <div className="divide-y divide-slate-100 overflow-hidden rounded-3xl border border-white/80 bg-white/95 shadow-[0_6px_24px_rgba(15,23,42,0.05)] backdrop-blur-xs">
                     {group.items.map((ev) => {
                       const relatedRecruitments = recruitments.filter(
                         (r) => r.event_id === ev.id
@@ -888,7 +880,6 @@ function HomeContent() {
                         <div key={ev.id} className="p-5">
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div className="space-y-1.5">
-                              {/* 日時・受付終了時刻 */}
                               <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-600">
                                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[#00A884]">
                                   📅 {formatJapaneseDateHeader(ev.event_date)}
@@ -906,12 +897,10 @@ function HomeContent() {
                                 )}
                               </div>
 
-                              {/* イベントタイトル */}
                               <h3 className="text-base font-extrabold text-slate-900">
                                 {ev.title}
                               </h3>
 
-                              {/* 店舗・エリア */}
                               {(ev.shop_name || ev.location) && (
                                 <p className="text-xs text-slate-500">
                                   📍 {ev.shop_name || ''}
@@ -921,13 +910,11 @@ function HomeContent() {
                               )}
                             </div>
 
-                            {/* 募集ステータスバッジ */}
                             <span className="rounded-full bg-[#00C49A] px-3 py-1 text-[11px] font-extrabold text-white">
                               募集中 ({relatedRecruitments.length})
                             </span>
                           </div>
 
-                          {/* アクションボタン行（詳細URL・募集を見る・募集する） */}
                           <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
                             {ev.detail_url && (
                               <a
@@ -951,13 +938,12 @@ function HomeContent() {
                             <button
                               type="button"
                               onClick={() => handleOpenFormForEvent(ev.id)}
-                              className="rounded-full bg-gradient-to-r from-[#00D69F] to-[#00B88D] px-4 py-1.5 text-xs font-extrabold text-white shadow-xs transition hover:opacity-95"
+                              className="rounded-full bg-gradient-to-r from-[#00D69F] to-[#00B88D] px-4 py-1.5 text-xs font-extrabold text-white shadow-2xs transition hover:opacity-95"
                             >
                               募集する &gt;
                             </button>
                           </div>
 
-                          {/* そのイベントの募集一覧アコーディオン */}
                           {isExpanded && (
                             <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
                               <div className="flex items-center justify-between gap-2">
@@ -1024,7 +1010,6 @@ function HomeContent() {
             </div>
           </div>
 
-          {/* 切り替えピルタブ（添付2枚目風） */}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -1034,8 +1019,8 @@ function HomeContent() {
               }}
               className={`rounded-full px-4 py-1.5 text-xs font-extrabold transition ${
                 activeTab === 'all'
-                  ? 'bg-[#00C49A] text-white shadow-xs'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'bg-[#00C49A] text-white shadow-2xs'
+                  : 'border border-white/80 bg-white/90 text-slate-600 hover:bg-white'
               }`}
             >
               すべて（{recruitments.length}）
@@ -1048,8 +1033,8 @@ function HomeContent() {
               }}
               className={`rounded-full px-4 py-1.5 text-xs font-extrabold transition ${
                 activeTab === 'mine'
-                  ? 'bg-[#00C49A] text-white shadow-xs'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'bg-[#00C49A] text-white shadow-2xs'
+                  : 'border border-white/80 bg-white/90 text-slate-600 hover:bg-white'
               }`}
             >
               自分の募集（{myRecruitments.length}）
@@ -1062,8 +1047,8 @@ function HomeContent() {
               }}
               className={`rounded-full px-4 py-1.5 text-xs font-extrabold transition ${
                 activeTab === 'applied'
-                  ? 'bg-[#00C49A] text-white shadow-xs'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'bg-[#00C49A] text-white shadow-2xs'
+                  : 'border border-white/80 bg-white/90 text-slate-600 hover:bg-white'
               }`}
             >
               応募一覧（{appliedRecruitments.length}）
@@ -1071,7 +1056,7 @@ function HomeContent() {
           </div>
 
           {visibleRecruitments.length === 0 ? (
-            <div className="rounded-3xl border border-slate-100 bg-white p-6 text-center text-xs text-slate-500 shadow-xs">
+            <div className="rounded-3xl border border-white/80 bg-white/95 p-6 text-center text-xs text-slate-500 shadow-2xs backdrop-blur-xs">
               {activeTab === 'mine'
                 ? 'まだ自分の募集投稿はありません。'
                 : activeTab === 'applied'
@@ -1093,7 +1078,7 @@ export default function HomePage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center bg-[#F4F8FB] text-slate-600">
+        <main className="flex min-h-screen items-center justify-center bg-transparent text-slate-600">
           読み込み中...
         </main>
       }

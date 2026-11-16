@@ -31,10 +31,9 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#E6F7F4] via-[#F4F8FB] to-[#EEF5FF] px-4 py-8 text-slate-800">
-      <div className="w-full max-w-md rounded-3xl border border-white bg-white/95 p-8 shadow-[0_12px_36px_rgba(15,23,42,0.08)]">
+    <main className="flex min-h-screen items-center justify-center bg-transparent px-4 py-8 text-slate-800">
+      <div className="w-full max-w-md rounded-3xl border border-white/80 bg-white/95 p-8 shadow-[0_12px_36px_rgba(15,23,42,0.08)] backdrop-blur-xs">
         <div className="flex flex-col items-center text-center">
-          {/* ミントグリーンカードロゴ */}
           <svg
             width="52"
             height="52"
@@ -85,7 +84,6 @@ export default function LoginPage() {
         )}
 
         <div className="mt-7 space-y-3">
-          {/* Googleログイン */}
           <button
             type="button"
             disabled={loadingProvider !== null}
@@ -95,12 +93,11 @@ export default function LoginPage() {
             <span>{loadingProvider === 'google' ? '接続中...' : 'Googleでログイン'}</span>
           </button>
 
-          {/* Xログイン */}
           <button
             type="button"
             disabled={loadingProvider !== null}
             onClick={() => handleOAuthLogin('x')}
-            className="flex w-full items-center justify-center gap-2.5 rounded-full border border-slate-200 bg-slate-900 px-5 py-3.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2.5 rounded-full border border-slate-200 bg-slate-900 px-5 py-3.5 text-sm font-extrabold text-white shadow-2xs transition hover:bg-slate-800 disabled:opacity-50"
           >
             <svg
               width="16"
