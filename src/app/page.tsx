@@ -688,7 +688,7 @@ function HomeContent() {
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             placeholder="イベント・店舗・エリアで検索..."
-            className="w-full rounded-full border border-white/80 bg-white/95 py-3 pl-11 pr-4 text-sm text-slate-800 shadow-2xs outline-none backdrop-blur-xs placeholder:text-slate-400 focus:border-[#00C49A]"
+            className="w-full rounded-full border border-white/80 bg-white/95 py-3 pl-11 pr-4 text-base text-slate-800 shadow-2xs outline-none backdrop-blur-xs placeholder:text-slate-400 focus:border-[#00C49A]"
           />
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
             🔍
@@ -735,7 +735,7 @@ function HomeContent() {
                 <select
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-base text-slate-800"
                 >
                   <option value="">イベント未定 / 下で新しく入力</option>
                   {activeEvents.map((ev) => (
@@ -760,7 +760,7 @@ function HomeContent() {
                       value={newEventTitle}
                       onChange={(e) => setNewEventTitle(e.target.value)}
                       placeholder="イベント名"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base text-slate-800"
                     />
                   </div>
                   <div>
@@ -769,7 +769,7 @@ function HomeContent() {
                       type="date"
                       value={newEventDate}
                       onChange={(e) => setNewEventDate(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base text-slate-800"
                     />
                   </div>
                   <div>
@@ -778,7 +778,7 @@ function HomeContent() {
                       type="time"
                       value={newEventStartTime}
                       onChange={(e) => setNewEventStartTime(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base text-slate-800"
                     />
                   </div>
                   <div>
@@ -787,7 +787,7 @@ function HomeContent() {
                       type="time"
                       value={newEventRegEndTime}
                       onChange={(e) => setNewEventRegEndTime(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base text-slate-800"
                     />
                   </div>
                   <div>
@@ -797,7 +797,7 @@ function HomeContent() {
                       value={newEventFee}
                       onChange={(e) => setNewEventFee(e.target.value)}
                       placeholder="例：5,000円"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base text-slate-800"
                     />
                   </div>
                   <div>
@@ -807,7 +807,7 @@ function HomeContent() {
                       value={newEventShop}
                       onChange={(e) => setNewEventShop(e.target.value)}
                       placeholder="店舗名・エリア"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base text-slate-800"
                     />
                   </div>
                   <div>
@@ -819,7 +819,7 @@ function HomeContent() {
                       value={newEventDetailUrl}
                       onChange={(e) => setNewEventDetailUrl(e.target.value)}
                       placeholder="https://..."
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base text-slate-800"
                     />
                   </div>
                 </div>
@@ -832,7 +832,7 @@ function HomeContent() {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="例：日曜のタッグ戦に出られる相方を探しています！"
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base text-slate-800"
                 />
               </div>
 
